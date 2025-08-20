@@ -26,7 +26,8 @@ export default {
 				foreground: 'hsl(var(--foreground))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					foreground: 'hsl(var(--primary-foreground))',
+					hover: 'hsl(var(--primary-hover))'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -51,6 +52,33 @@ export default {
 				card: {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
+				},
+				// Insurance Status Colors
+				success: {
+					DEFAULT: 'hsl(var(--success))',
+					foreground: 'hsl(var(--success-foreground))'
+				},
+				warning: {
+					DEFAULT: 'hsl(var(--warning))',
+					foreground: 'hsl(var(--warning-foreground))'
+				},
+				// Status Indicators
+				status: {
+					pending: 'hsl(var(--status-pending))',
+					processing: 'hsl(var(--status-processing))',
+					completed: 'hsl(var(--status-completed))',
+					error: 'hsl(var(--status-error))'
+				},
+				// Agent Pipeline Colors
+				agent: {
+					intake: 'hsl(var(--agent-intake))',
+					validation: 'hsl(var(--agent-validation))',
+					fraud: 'hsl(var(--agent-fraud))',
+					claim: 'hsl(var(--agent-claim))',
+					coverage: 'hsl(var(--agent-coverage))',
+					damage: 'hsl(var(--agent-damage))',
+					settlement: 'hsl(var(--agent-settlement))',
+					communication: 'hsl(var(--agent-communication))'
 				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',

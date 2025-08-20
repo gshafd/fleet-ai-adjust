@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Header } from "@/components/layout/Header";
 import { WizardSteps } from "@/components/ui/wizard-steps";
 import { FileUpload } from "@/components/ui/file-upload";
+import { useClaims } from "@/context/ClaimsContext";
 import { ArrowLeft, ArrowRight, MapPin, Calendar, User, FileText, Upload, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -23,6 +25,7 @@ export default function ReportClaim() {
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
   const [submissionMethod, setSubmissionMethod] = useState<"form" | "documents" | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -35,6 +38,8 @@ export default function ReportClaim() {
     files: [] as File[],
   });
   const { toast } = useToast();
+  const { addClaim } = useClaims();
+  const navigate = useNavigate();
 
   const updateFormData = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -62,12 +67,32 @@ export default function ReportClaim() {
   };
 
   const submitClaim = () => {
-    toast({
-      title: "Claim Submitted Successfully!",
-      description: "Your claim has been submitted to our AI agents. Claim ID: CL-2024-001234",
+    setIsSubmitting(true);
+    
+    // Create new claim with initial processing status
+    const claimId = addClaim({
+      ...formData,
+      fleetOwner: formData.name + " Fleet",
+      vehiclesInvolved: ["AUTO-001"], // Default for now
+      lossType: "Auto Collision", // Default for now  
+      status: "processing",
+      assignedAdjuster: "AI Agent",
+      payoutEstimate: 0,
+      currentAgent: "fnol-intake",
+      progress: 10,
     });
-    // Here you would typically send the data to your backend
-    console.log("Submitting claim:", formData);
+
+    // Simulate AI pipeline processing
+    setTimeout(() => {
+      setIsSubmitting(false);
+      toast({
+        title: "Claim Submitted Successfully!",
+        description: `Your claim ${claimId} has been submitted and is being processed by our AI agents.`,
+      });
+      
+      // Navigate to claim details to show pipeline
+      navigate(`/claim/${claimId}`);
+    }, 2000);
   };
 
   const handleDocumentExtraction = (files: File[]) => {
@@ -415,8 +440,12 @@ export default function ReportClaim() {
             </Button>
 
             {currentStep === "review" ? (
-              <Button onClick={submitClaim} className="flex items-center gap-2">
-                Submit Claim to AI Agent
+              <Button 
+                onClick={submitClaim} 
+                className="flex items-center gap-2"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Submitting..." : "Submit Claim to AI Agent"}
                 <ArrowRight className="w-4 h-4" />
               </Button>
             ) : currentStep === "method" ? (

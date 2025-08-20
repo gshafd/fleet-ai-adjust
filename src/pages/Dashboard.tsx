@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { useClaims } from "@/context/ClaimsContext";
 import { 
   FileText, 
   Shield, 
@@ -18,60 +20,10 @@ import {
   Car
 } from "lucide-react";
 
-// Mock data for demonstration
-const mockClaims = [
-  {
-    id: "CL-2024-001234",
-    policyNumber: "POL-789456",
-    fleetOwner: "ABC Logistics Inc.",
-    vehiclesInvolved: ["TRK-001", "VAN-045"],
-    lossType: "Collision",
-    status: "processing",
-    assignedAdjuster: "Sarah Johnson",
-    payoutEstimate: 45000,
-    currentAgent: "damage-assessment",
-    progress: 60,
-  },
-  {
-    id: "CL-2024-001235",
-    policyNumber: "POL-789457",
-    fleetOwner: "XYZ Transport",
-    vehiclesInvolved: ["TRK-002"],
-    lossType: "Cargo Theft",
-    status: "completed",
-    assignedAdjuster: "Mike Chen",
-    payoutEstimate: 85000,
-    currentAgent: "communication",
-    progress: 100,
-  },
-  {
-    id: "CL-2024-001236",
-    policyNumber: "POL-789458",
-    fleetOwner: "DEF Shipping",
-    vehiclesInvolved: ["VAN-012", "TRL-008"],
-    lossType: "Liability",
-    status: "fraud-review",
-    assignedAdjuster: "Lisa Park",
-    payoutEstimate: 125000,
-    currentAgent: "fraud-detection",
-    progress: 30,
-  },
-];
-
-const agentPipeline = [
-  { id: "fnol-intake", name: "FNOL Intake", icon: FileText, color: "agent-intake" },
-  { id: "validation", name: "Validation", icon: Shield, color: "agent-validation" },
-  { id: "fraud-detection", name: "Fraud Detection", icon: AlertTriangle, color: "agent-fraud" },
-  { id: "claim-creation", name: "Claim Creation", icon: CheckCircle, color: "agent-claim" },
-  { id: "coverage-verification", name: "Coverage Verification", icon: Shield, color: "agent-coverage" },
-  { id: "damage-assessment", name: "Damage Assessment", icon: Eye, color: "agent-damage" },
-  { id: "settlement-calculation", name: "Settlement Calculation", icon: Calculator, color: "agent-settlement" },
-  { id: "communication", name: "Communication", icon: Mail, color: "agent-communication" },
-];
-
 export default function Dashboard() {
-  const [selectedClaim, setSelectedClaim] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("pipeline");
+  const [activeTab, setActiveTab] = useState("claims");
+  const navigate = useNavigate();
+  const { claims } = useClaims();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -129,7 +81,6 @@ export default function Dashboard() {
         {/* Navigation Tabs */}
         <div className="flex gap-2 mb-6">
           {[
-            { id: "pipeline", label: "Agent Pipeline" },
             { id: "claims", label: "Claims Overview" },
             { id: "fleet", label: "Fleet Management" },
             { id: "adjusters", label: "Adjuster Allocation" },
@@ -143,93 +94,6 @@ export default function Dashboard() {
             </Button>
           ))}
         </div>
-
-        {/* Agent Pipeline View */}
-        {activeTab === "pipeline" && (
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Sub-Agent Orchestration Pipeline</CardTitle>
-                <CardDescription>
-                  Real-time status of AI agents processing claims end-to-end
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between items-center mb-8">
-                  {agentPipeline.map((agent, index) => (
-                    <div key={agent.id} className="flex flex-col items-center flex-1">
-                      <div 
-                        className={`w-12 h-12 rounded-full border-2 flex items-center justify-center mb-2 bg-${agent.color}/20 border-${agent.color}`}
-                      >
-                        <agent.icon className={`w-6 h-6 text-${agent.color}`} />
-                      </div>
-                      <p className="text-xs font-medium text-center">{agent.name}</p>
-                      {index < agentPipeline.length - 1 && (
-                        <div className="w-full h-0.5 bg-border mt-4" />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Active Claims in Pipeline */}
-            <div className="grid gap-4">
-              {mockClaims.map((claim) => (
-                <Card key={claim.id} className="cursor-pointer hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold">{claim.id}</h3>
-                        <p className="text-sm text-muted-foreground">{claim.fleetOwner}</p>
-                      </div>
-                      <Badge variant={getStatusColor(claim.status) as any}>
-                        {getStatusLabel(claim.status)}
-                      </Badge>
-                    </div>
-                    
-                    <div className="grid md:grid-cols-4 gap-4 mb-4">
-                      <div>
-                        <p className="text-xs text-muted-foreground">Policy Number</p>
-                        <p className="font-medium">{claim.policyNumber}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Loss Type</p>
-                        <p className="font-medium">{claim.lossType}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Assigned Adjuster</p>
-                        <p className="font-medium">{claim.assignedAdjuster}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Estimated Payout</p>
-                        <p className="font-medium">${claim.payoutEstimate.toLocaleString()}</p>
-                      </div>
-                    </div>
-
-                    <div className="mb-2">
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Progress</span>
-                        <span>{claim.progress}%</span>
-                      </div>
-                      <Progress value={claim.progress} className="h-2" />
-                    </div>
-
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Clock className="w-4 h-4" />
-                        <span>Currently at: {agentPipeline.find(a => a.id === claim.currentAgent)?.name}</span>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        View Details
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Claims Overview */}
         {activeTab === "claims" && (
@@ -254,7 +118,7 @@ export default function Dashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {mockClaims.map((claim) => (
+                    {claims.map((claim) => (
                       <tr key={claim.id} className="border-b hover:bg-muted/50">
                         <td className="p-2 font-medium">{claim.id}</td>
                         <td className="p-2">{claim.fleetOwner}</td>
@@ -276,7 +140,13 @@ export default function Dashboard() {
                         <td className="p-2">{claim.assignedAdjuster}</td>
                         <td className="p-2">${claim.payoutEstimate.toLocaleString()}</td>
                         <td className="p-2">
-                          <Button variant="ghost" size="sm">View</Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => navigate(`/claim/${claim.id}`)}
+                          >
+                            View
+                          </Button>
                         </td>
                       </tr>
                     ))}

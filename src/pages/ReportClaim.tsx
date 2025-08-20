@@ -7,11 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Header } from "@/components/layout/Header";
 import { WizardSteps } from "@/components/ui/wizard-steps";
 import { FileUpload } from "@/components/ui/file-upload";
-import { ClaimAssistant } from "@/components/ai-assistant/ClaimAssistant";
-import { ArrowLeft, ArrowRight, MapPin, Calendar, User, FileText } from "lucide-react";
+import { ArrowLeft, ArrowRight, MapPin, Calendar, User, FileText, Upload, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const steps = [
+  { id: "method", title: "Choose Method", description: "How to submit" },
   { id: "details", title: "Claimant Details", description: "Basic information" },
   { id: "incident", title: "Incident Details", description: "What happened" },
   { id: "evidence", title: "Upload Evidence", description: "Supporting documents" },
@@ -19,8 +19,10 @@ const steps = [
 ];
 
 export default function ReportClaim() {
-  const [currentStep, setCurrentStep] = useState("details");
+  const [currentStep, setCurrentStep] = useState("method");
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
+  const [submissionMethod, setSubmissionMethod] = useState<"form" | "documents" | null>(null);
+  const [isExtracting, setIsExtracting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -42,7 +44,13 @@ export default function ReportClaim() {
     const stepIndex = steps.findIndex(s => s.id === currentStep);
     if (stepIndex < steps.length - 1) {
       setCompletedSteps(prev => [...prev, currentStep]);
-      setCurrentStep(steps[stepIndex + 1].id);
+      
+      // If user chose document upload method, skip to review after method selection
+      if (currentStep === "method" && submissionMethod === "documents" && formData.files.length > 0) {
+        setCurrentStep("review");
+      } else {
+        setCurrentStep(steps[stepIndex + 1].id);
+      }
     }
   };
 
@@ -62,8 +70,119 @@ export default function ReportClaim() {
     console.log("Submitting claim:", formData);
   };
 
+  const handleDocumentExtraction = (files: File[]) => {
+    if (files.length === 0) return;
+    
+    setIsExtracting(true);
+    updateFormData("files", files);
+    
+    // Simulate AI extraction
+    setTimeout(() => {
+      // Mock extracted data from documents
+      updateFormData("name", "John Smith");
+      updateFormData("phone", "(555) 987-6543");
+      updateFormData("email", "john.smith@company.com");
+      updateFormData("policyNumber", "POL-789456123");
+      updateFormData("incidentDate", "2024-01-15");
+      updateFormData("incidentTime", "14:30");
+      updateFormData("location", "Interstate 95, Mile Marker 127, Baltimore, MD");
+      updateFormData("description", "Rear-end collision occurred during heavy traffic. Commercial vehicle struck from behind by passenger car while stopped at traffic signal.");
+      
+      setIsExtracting(false);
+      setCompletedSteps(["method", "details", "incident", "evidence"]);
+      setCurrentStep("review");
+      
+      toast({
+        title: "Documents Processed!",
+        description: "AI has successfully extracted claim details from your documents.",
+      });
+    }, 3000);
+  };
+
   const renderStepContent = () => {
     switch (currentStep) {
+      case "method":
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>Choose Submission Method</CardTitle>
+              <CardDescription>
+                How would you like to submit your claim information?
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <Card 
+                  className={`cursor-pointer border-2 transition-colors ${submissionMethod === "form" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
+                  onClick={() => setSubmissionMethod("form")}
+                >
+                  <CardContent className="p-6 text-center">
+                    <User className="w-12 h-12 mx-auto mb-4 text-primary" />
+                    <h3 className="font-semibold mb-2">Fill Out Form</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Step-by-step guided form to enter claim details manually
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card 
+                  className={`cursor-pointer border-2 transition-colors ${submissionMethod === "documents" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
+                  onClick={() => setSubmissionMethod("documents")}
+                >
+                  <CardContent className="p-6 text-center">
+                    <Upload className="w-12 h-12 mx-auto mb-4 text-primary" />
+                    <h3 className="font-semibold mb-2">Upload Documents</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Upload documents and let AI extract all claim details automatically
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              {submissionMethod === "documents" && (
+                <div className="mt-6">
+                  <div className="mb-4">
+                    <h4 className="font-medium mb-2">Upload Your Claim Documents</h4>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Our AI will automatically extract all necessary information from your documents.
+                    </p>
+                  </div>
+                  
+                  <FileUpload
+                    title="Upload All Claim Documents"
+                    description="Upload police reports, photos, insurance cards, driver's licenses, etc."
+                    onFilesChange={handleDocumentExtraction}
+                    maxFiles={15}
+                  />
+                  
+                  {isExtracting && (
+                    <div className="mt-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+                        <div>
+                          <p className="font-medium text-primary">Processing Documents...</p>
+                          <p className="text-sm text-muted-foreground">AI is extracting claim details from your uploaded files</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+                <h4 className="font-medium mb-2">Recommended Documents for AI Extraction:</h4>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>• Police Report (PDF)</li>
+                  <li>• Insurance ID Cards</li>
+                  <li>• Driver's License</li>
+                  <li>• Photos of damage and accident scene</li>
+                  <li>• Vehicle registration</li>
+                  <li>• Any correspondence or emails about the incident</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        );
       case "details":
         return (
           <Card>
@@ -279,15 +398,8 @@ export default function ReportClaim() {
             completedSteps={completedSteps}
           />
 
-          <div className="flex flex-col lg:flex-row gap-8">
-            <div className="flex-1">
-              {renderStepContent()}
-            </div>
-            
-            {/* AI Assistant */}
-            <div className="lg:w-80">
-              <ClaimAssistant />
-            </div>
+          <div className="max-w-4xl mx-auto">
+            {renderStepContent()}
           </div>
 
           {/* Navigation Buttons */}
@@ -295,7 +407,7 @@ export default function ReportClaim() {
             <Button
               variant="outline"
               onClick={prevStep}
-              disabled={currentStep === "details"}
+              disabled={currentStep === "method"}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -305,6 +417,15 @@ export default function ReportClaim() {
             {currentStep === "review" ? (
               <Button onClick={submitClaim} className="flex items-center gap-2">
                 Submit Claim to AI Agent
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            ) : currentStep === "method" ? (
+              <Button 
+                onClick={nextStep} 
+                className="flex items-center gap-2"
+                disabled={!submissionMethod || (submissionMethod === "documents" && !isExtracting && formData.files.length === 0)}
+              >
+                {submissionMethod === "form" ? "Continue with Form" : submissionMethod === "documents" ? "Processing..." : "Choose Method"}
                 <ArrowRight className="w-4 h-4" />
               </Button>
             ) : (

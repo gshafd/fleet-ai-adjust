@@ -8,8 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Header } from "@/components/layout/Header";
 import { WizardSteps } from "@/components/ui/wizard-steps";
 import { FileUpload } from "@/components/ui/file-upload";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useClaims } from "@/context/ClaimsContext";
-import { ArrowLeft, ArrowRight, MapPin, Calendar, User, FileText, Upload, CheckCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, MapPin, Calendar, User, FileText, Upload, CheckCircle, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const steps = [
@@ -26,6 +27,8 @@ export default function ReportClaim() {
   const [submissionMethod, setSubmissionMethod] = useState<"form" | "documents" | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSubmissionDialog, setShowSubmissionDialog] = useState(false);
+  const [submittedClaimId, setSubmittedClaimId] = useState<string>("");
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -50,12 +53,7 @@ export default function ReportClaim() {
     if (stepIndex < steps.length - 1) {
       setCompletedSteps(prev => [...prev, currentStep]);
       
-      // If user chose document upload method, skip to review after method selection
-      if (currentStep === "method" && submissionMethod === "documents" && formData.files.length > 0) {
-        setCurrentStep("review");
-      } else {
-        setCurrentStep(steps[stepIndex + 1].id);
-      }
+      setCurrentStep(steps[stepIndex + 1].id);
     }
   };
 
@@ -72,56 +70,46 @@ export default function ReportClaim() {
     // Create new claim with initial processing status
     const claimId = addClaim({
       ...formData,
-      fleetOwner: formData.name + " Fleet",
+      fleetOwner: formData.name || "Unknown Fleet",
       vehiclesInvolved: ["AUTO-001"], // Default for now
       lossType: "Auto Collision", // Default for now  
-      status: "processing",
+      status: "submitted",
       assignedAdjuster: "AI Agent",
       payoutEstimate: 0,
-      currentAgent: "fnol-intake",
-      progress: 10,
+      currentAgent: "document-review",
+      progress: 5,
     });
 
-    // Simulate AI pipeline processing
+    setSubmittedClaimId(claimId);
+    
+    // Show submission dialog first
     setTimeout(() => {
       setIsSubmitting(false);
-      toast({
-        title: "Claim Submitted Successfully!",
-        description: `Your claim ${claimId} has been submitted and is being processed by our AI agents.`,
-      });
-      
-      // Navigate to claim details to show pipeline
-      navigate(`/claim/${claimId}`);
-    }, 2000);
+      setShowSubmissionDialog(true);
+    }, 1500);
   };
 
-  const handleDocumentExtraction = (files: File[]) => {
+  const startAIPipeline = () => {
+    setShowSubmissionDialog(false);
+    
+    // Navigate to claim details to show AI pipeline processing
+    navigate(`/claim/${submittedClaimId}`);
+    
+    // Start AI pipeline processing in the background
+    setTimeout(() => {
+      // This will be handled by the ClaimDetails page
+    }, 500);
+  };
+
+  const handleDocumentUpload = (files: File[]) => {
     if (files.length === 0) return;
     
-    setIsExtracting(true);
     updateFormData("files", files);
     
-    // Simulate AI extraction
-    setTimeout(() => {
-      // Mock extracted data from documents
-      updateFormData("name", "John Smith");
-      updateFormData("phone", "(555) 987-6543");
-      updateFormData("email", "john.smith@company.com");
-      updateFormData("policyNumber", "POL-789456123");
-      updateFormData("incidentDate", "2024-01-15");
-      updateFormData("incidentTime", "14:30");
-      updateFormData("location", "Interstate 95, Mile Marker 127, Baltimore, MD");
-      updateFormData("description", "Rear-end collision occurred during heavy traffic. Commercial vehicle struck from behind by passenger car while stopped at traffic signal.");
-      
-      setIsExtracting(false);
-      setCompletedSteps(["method", "details", "incident", "evidence"]);
-      setCurrentStep("review");
-      
-      toast({
-        title: "Documents Processed!",
-        description: "AI has successfully extracted claim details from your documents.",
-      });
-    }, 3000);
+    toast({
+      title: "Documents Uploaded!",
+      description: `${files.length} document(s) uploaded successfully. Ready to submit.`,
+    });
   };
 
   const renderStepContent = () => {
@@ -176,17 +164,17 @@ export default function ReportClaim() {
                   <FileUpload
                     title="Upload All Claim Documents"
                     description="Upload police reports, photos, insurance cards, driver's licenses, etc."
-                    onFilesChange={handleDocumentExtraction}
+                    onFilesChange={handleDocumentUpload}
                     maxFiles={15}
                   />
                   
-                  {isExtracting && (
-                    <div className="mt-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                  {formData.files.length > 0 && (
+                    <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
                       <div className="flex items-center gap-3">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+                        <CheckCircle className="w-5 h-5 text-green-600" />
                         <div>
-                          <p className="font-medium text-primary">Processing Documents...</p>
-                          <p className="text-sm text-muted-foreground">AI is extracting claim details from your uploaded files</p>
+                          <p className="font-medium text-green-800">{formData.files.length} Document(s) Uploaded</p>
+                          <p className="text-sm text-green-700">Ready to submit for AI processing</p>
                         </div>
                       </div>
                     </div>
@@ -439,33 +427,88 @@ export default function ReportClaim() {
               Previous
             </Button>
 
-            {currentStep === "review" ? (
-              <Button 
-                onClick={submitClaim} 
-                className="flex items-center gap-2"
+            {/* For document submission method, show submit button after upload */}
+            {submissionMethod === "documents" && currentStep === "method" && formData.files.length > 0 ? (
+              <Button
+                onClick={submitClaim}
                 disabled={isSubmitting}
-              >
-                {isSubmitting ? "Submitting..." : "Submit Claim to AI Agent"}
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            ) : currentStep === "method" ? (
-              <Button 
-                onClick={nextStep} 
                 className="flex items-center gap-2"
-                disabled={!submissionMethod || (submissionMethod === "documents" && !isExtracting && formData.files.length === 0)}
               >
-                {submissionMethod === "form" ? "Continue with Form" : submissionMethod === "documents" ? "Processing..." : "Choose Method"}
-                <ArrowRight className="w-4 h-4" />
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4" />
+                    Submit Documents
+                  </>
+                )}
               </Button>
             ) : (
-              <Button onClick={nextStep} className="flex items-center gap-2">
-                Next
-                <ArrowRight className="w-4 h-4" />
+              <Button
+                onClick={currentStep === "review" ? submitClaim : nextStep}
+                disabled={
+                  !submissionMethod ||
+                  (currentStep === "review" && isSubmitting) ||
+                  (submissionMethod === "documents" && formData.files.length === 0 && currentStep === "method")
+                }
+                className="flex items-center gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Submitting...
+                  </>
+                ) : currentStep === "review" ? (
+                  <>
+                    <CheckCircle className="w-4 h-4" />
+                    Submit Claim
+                  </>
+                ) : (
+                  <>
+                    Next
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
               </Button>
             )}
           </div>
         </div>
       </div>
+
+      {/* Submission Success Dialog */}
+      <Dialog open={showSubmissionDialog} onOpenChange={setShowSubmissionDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle className="w-6 h-6 text-green-600" />
+              Documents Submitted Successfully!
+            </DialogTitle>
+            <DialogDescription className="space-y-4">
+              <div>
+                Your documents have been uploaded and your reference ID is:
+              </div>
+              <div className="p-3 bg-primary/10 rounded-lg text-center">
+                <span className="font-mono font-bold text-lg text-primary">
+                  {submittedClaimId}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <span>Our AI agents are now taking over to process your claim automatically.</span>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center">
+            <Button onClick={startAIPipeline} className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              Watch AI Agents Process Your Claim
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

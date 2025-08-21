@@ -47,14 +47,6 @@ export function Header() {
               Track Claim
             </Link>
             <Link
-              to="/dashboard"
-              className={`text-sm font-medium transition-colors hover:text-primary ${
-                isActive("/dashboard") ? "text-primary" : "text-muted-foreground"
-              }`}
-            >
-              Dashboard
-            </Link>
-            <Link
               to="/help"
               className={`text-sm font-medium transition-colors hover:text-primary ${
                 isActive("/help") ? "text-primary" : "text-muted-foreground"
@@ -66,7 +58,7 @@ export function Header() {
 
           {/* CTA Button */}
           <Button asChild className="bg-primary hover:bg-primary-hover">
-            <Link to="/report-claim">Report a Claim Now</Link>
+            <Link to="/dashboard">Dashboard</Link>
           </Button>
         </div>
       </div>

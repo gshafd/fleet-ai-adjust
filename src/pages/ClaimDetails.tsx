@@ -14,8 +14,8 @@ const getAgentOutput = (agentId: string, claim: any) => {
       return `EXTRACTED CLAIM INFORMATION FROM UPLOADED DOCUMENTS:
 
 📄 POLICE REPORT ANALYSIS:
-✓ Incident Date: ${claim.incidentDate} at ${claim.incidentTime}
-✓ Location: ${claim.location}
+✓ Incident Date: ${claim.incidentDate || '2024-01-15'} at ${claim.incidentTime || '14:30'}
+✓ Location: ${claim.location || 'Interstate 95, Mile Marker 127, Baltimore, MD'}
 ✓ Weather Conditions: Clear, dry roads
 ✓ Officer Badge: #4721 - Officer Martinez
 ✓ Report Number: PR-2024-089456
@@ -35,14 +35,14 @@ const getAgentOutput = (agentId: string, claim: any) => {
 ✓ Vehicle Make/Model: 2020 Ford Transit Van
 
 STRUCTURED DATA EXTRACTED:
-✓ Policy Number: ${claim.policyNumber}
-✓ Fleet Owner: ${claim.fleetOwner}
-✓ Driver Name: ${claim.name}
-✓ Contact Phone: ${claim.phone}
-✓ Contact Email: ${claim.email}
-✓ Loss Type: ${claim.lossType}
-✓ Vehicles Involved: ${claim.vehiclesInvolved.join(', ')}
-✓ Incident Description: ${claim.description}`;
+✓ Policy Number: ${claim.policyNumber || 'POL-789456'}
+✓ Fleet Owner: ${claim.fleetOwner || 'ABC Logistics Inc.'}
+✓ Driver Name: ${claim.name || 'John Smith'}
+✓ Contact Phone: ${claim.phone || '(555) 123-4567'}
+✓ Contact Email: ${claim.email || 'john@abclogistics.com'}
+✓ Loss Type: ${claim.lossType || 'Auto Collision'}
+✓ Vehicles Involved: ${claim.vehiclesInvolved?.length > 0 ? claim.vehiclesInvolved.join(', ') : 'AUTO-001'}
+✓ Incident Description: ${claim.description || 'Rear-end collision during heavy traffic causing front-end damage to vehicle'}`;
 
     case "validation":
       return `VALIDATION RESULTS:

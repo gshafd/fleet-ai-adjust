@@ -8,70 +8,150 @@ import { useClaims } from "@/context/ClaimsContext";
 import { ArrowLeft, FileText, Shield, AlertTriangle, CheckCircle, Calculator, Mail, Eye, Clock, Zap, Car } from "lucide-react";
 import { useEffect, useState } from "react";
 
+const getAgentOutput = (agentId: string, claim: any) => {
+  switch (agentId) {
+    case "fnol-intake":
+      return `EXTRACTED CLAIM INFORMATION:
+✓ Policy Number: ${claim.policyNumber}
+✓ Fleet Owner: ${claim.fleetOwner}
+✓ Claimant Name: ${claim.name}
+✓ Contact Phone: ${claim.phone}
+✓ Contact Email: ${claim.email}
+✓ Incident Date: ${claim.incidentDate}
+✓ Incident Time: ${claim.incidentTime}
+✓ Location: ${claim.location}
+✓ Loss Type: ${claim.lossType}
+✓ Vehicles Involved: ${claim.vehiclesInvolved.join(', ')}
+✓ Description: ${claim.description}
+✓ Files Processed: ${claim.files.length} documents analyzed`;
+
+    case "validation":
+      return `VALIDATION RESULTS:
+✓ Policy verified as active
+✓ Fleet registration confirmed for ${claim.fleetOwner}
+✓ Driver license validated
+✓ Vehicle VIN verification passed
+✓ Coverage period validated
+✓ Claim is valid for processing`;
+
+    case "fraud-detection":
+      return `FRAUD ANALYSIS COMPLETE:
+✓ No duplicate claims found in system
+✓ Incident location verified via GPS data
+✓ Timeline analysis passed - consistent story
+✓ No prior suspicious activity detected
+✓ Fraud risk score: 15/100 (Low Risk)
+✓ No flags detected - proceeding with claim`;
+
+    case "claim-creation":
+      return `CLAIM CREATED SUCCESSFULLY:
+✓ Claim Number: ${claim.id}
+✓ Created in system: ${claim.submittedAt.toLocaleDateString()}
+✓ Assigned Adjuster: ${claim.assignedAdjuster}
+✓ Priority Level: Standard
+✓ SLA Target: 5 business days
+✓ Workflow initiated`;
+
+    case "coverage-verification":
+      return `COVERAGE VERIFICATION:
+✓ Policy Type: Commercial Fleet Insurance
+✓ Coverage Active: Yes
+✓ ${claim.lossType} coverage confirmed
+✓ Deductible Amount: $2,500
+✓ Policy limits verified
+✓ Coverage applicable for this incident
+✓ No exclusions apply`;
+
+    case "damage-assessment":
+      return `DAMAGE ASSESSMENT COMPLETE:
+✓ Vehicle damage assessed from uploaded photos
+✓ Repair estimate calculated: $18,000
+✓ Total loss threshold: $25,000 (Not exceeded)
+✓ Repairable damage confirmed
+✓ Labor costs: $8,000
+✓ Parts costs: $10,000
+✓ Assessment confidence: 95%`;
+
+    case "settlement-payout":
+      return `SETTLEMENT CALCULATION:
+✓ Gross settlement amount: $18,000
+✓ Less deductible: -$2,500
+✓ Net payout amount: $${claim.payoutEstimate.toLocaleString()}
+✓ Payment method: Direct deposit
+✓ Processing fee: $0
+✓ Settlement approved for payment`;
+
+    case "communication":
+      return `COMMUNICATION DRAFTED:
+✓ Settlement notification email prepared
+✓ Payment instructions included
+✓ Claim summary attached
+✓ Next steps outlined for claimant
+✓ Adjuster copy prepared
+✓ Ready for claims representative review
+✓ Estimated delivery: Within 24 hours`;
+
+    default:
+      return "Processing...";
+  }
+};
+
 const agentPipeline = [
   { 
     id: "fnol-intake", 
     name: "FNOL Intake Agent", 
     icon: FileText, 
     color: "blue",
-    description: "Captures loss details, claimant details, policy details from forms, images, PDFs",
-    output: "✓ Extracted incident date: 2024-01-15\n✓ Captured claimant: John Smith\n✓ Policy number: POL-789456\n✓ Loss type: Collision identified"
+    description: "Captures loss details, claimant details, policy details from forms, images, PDFs"
   },
   { 
     id: "validation", 
     name: "Validation Agent", 
     icon: Shield, 
     color: "indigo",
-    description: "Cross-checks policies, fleets, drivers and validates claim validity",
-    output: "✓ Policy verified as active\n✓ Driver license validated\n✓ Fleet registration confirmed\n✓ Claim is valid for processing"
+    description: "Cross-checks policies, fleets, drivers and validates claim validity"
   },
   { 
     id: "fraud-detection", 
     name: "Fraud Detection Agent", 
     icon: AlertTriangle, 
     color: "orange",
-    description: "Detects suspicious claims, staged accidents, and duplicate claims",
-    output: "✓ No duplicate claims found\n✓ Incident location verified\n✓ Timeline analysis passed\n✓ Low fraud risk score: 15/100"
+    description: "Detects suspicious claims, staged accidents, and duplicate claims"
   },
   { 
     id: "claim-creation", 
     name: "Claim Creation Agent", 
     icon: Zap, 
     color: "purple",
-    description: "Creates claim in system, generates claim number and assigns adjuster",
-    output: "✓ Claim created: CL-2024-757070\n✓ Assigned adjuster: Sarah Johnson\n✓ Priority level: Standard\n✓ SLA: 5 business days"
+    description: "Creates claim in system, generates claim number and assigns adjuster"
   },
   { 
     id: "coverage-verification", 
     name: "Coverage Verification Agent", 
     icon: CheckCircle, 
     color: "green",
-    description: "Verifies coverage by cross-checking policy information",
-    output: "✓ Collision coverage confirmed\n✓ Deductible: $2,500\n✓ Policy limits verified\n✓ Coverage applicable for this incident"
+    description: "Verifies coverage by cross-checking policy information"
   },
   { 
     id: "damage-assessment", 
     name: "Damage Assessment Agent", 
     icon: Car, 
     color: "emerald",
-    description: "Assesses damage based on evidence and estimates repair costs",
-    output: "✓ Vehicle damage assessed\n✓ Repair estimate: $18,000\n✓ Total loss threshold: Not exceeded\n✓ Repairable damage confirmed"
+    description: "Assesses damage based on evidence and estimates repair costs"
   },
   { 
     id: "settlement-payout", 
     name: "Settlement Payout Agent", 
     icon: Calculator, 
     color: "cyan",
-    description: "Estimates payout with deductibles and liability applied",
-    output: "✓ Gross settlement: $18,000\n✓ Less deductible: $2,500\n✓ Net payout: $15,500\n✓ Payment approved"
+    description: "Estimates payout with deductibles and liability applied"
   },
   { 
     id: "communication", 
     name: "Communication Agent", 
     icon: Mail, 
     color: "rose",
-    description: "Drafts professional payout email for claims representative",
-    output: "✓ Settlement letter drafted\n✓ Payment instructions included\n✓ Next steps outlined\n✓ Ready for review and sending"
+    description: "Drafts professional payout email for claims representative"
   },
 ];
 
@@ -316,7 +396,7 @@ export default function ClaimDetails() {
                               {(isCompleted || (isCurrent && Math.random() > 0.5)) && (
                                 <div className="bg-gray-50 rounded-lg p-3 mt-2">
                                   <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono">
-                                    {agent.output}
+                                    {getAgentOutput(agent.id, claim)}
                                   </pre>
                                 </div>
                               )}
@@ -338,110 +418,69 @@ export default function ClaimDetails() {
           </CardContent>
         </Card>
 
-        {/* Claim Details */}
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Claim Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+        {/* Uploaded Documents */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              Uploaded Documents
+            </CardTitle>
+            <CardDescription>
+              Files submitted with the claim and processed by AI agents
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 rounded-lg border">
+                <div className="flex items-center gap-3">
+                  <FileText className="w-8 h-8 text-muted-foreground" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Policy Number</p>
-                    <p className="font-medium">{claim.policyNumber}</p>
+                    <p className="font-medium">Police Report</p>
+                    <p className="text-sm text-muted-foreground">accident-report.pdf • 2.4 MB</p>
                   </div>
+                </div>
+                <Button variant="outline" size="sm">
+                  <Eye className="w-4 h-4 mr-2" />
+                  View
+                </Button>
+              </div>
+              
+              <div className="flex items-center justify-between p-3 rounded-lg border">
+                <div className="flex items-center gap-3">
+                  <FileText className="w-8 h-8 text-muted-foreground" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Loss Type</p>
-                    <p className="font-medium">{claim.lossType}</p>
+                    <p className="font-medium">Vehicle Photos</p>
+                    <p className="text-sm text-muted-foreground">damage-photos.zip • 8.7 MB</p>
                   </div>
+                </div>
+                <Button variant="outline" size="sm">
+                  <Eye className="w-4 h-4 mr-2" />
+                  View
+                </Button>
+              </div>
+              
+              <div className="flex items-center justify-between p-3 rounded-lg border">
+                <div className="flex items-center gap-3">
+                  <FileText className="w-8 h-8 text-muted-foreground" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Assigned Adjuster</p>
-                    <p className="font-medium">{claim.assignedAdjuster}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Estimated Payout</p>
-                    <p className="font-medium">${claim.payoutEstimate.toLocaleString()}</p>
+                    <p className="font-medium">Driver License</p>
+                    <p className="text-sm text-muted-foreground">license-scan.jpg • 1.2 MB</p>
                   </div>
                 </div>
-                
-                <div>
-                  <p className="text-sm text-muted-foreground">Vehicles Involved</p>
-                  <div className="flex gap-2 mt-1">
-                    {claim.vehiclesInvolved.map((vehicle) => (
-                      <Badge key={vehicle} variant="outline">{vehicle}</Badge>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Incident Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Date</p>
-                    <p className="font-medium">{claim.incidentDate}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Time</p>
-                    <p className="font-medium">{claim.incidentTime}</p>
-                  </div>
-                </div>
-                
-                <div>
-                  <p className="text-sm text-muted-foreground">Location</p>
-                  <p className="font-medium">{claim.location}</p>
-                </div>
-                
-                <div>
-                  <p className="text-sm text-muted-foreground">Description</p>
-                  <p className="text-sm">{claim.description}</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Contact Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Name</p>
-                  <p className="font-medium">{claim.name}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Phone</p>
-                  <p className="font-medium">{claim.phone}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="font-medium">{claim.email}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Submitted</p>
-                  <p className="font-medium">{claim.submittedAt.toLocaleDateString()}</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Uploaded Documents</CardTitle>
-              </CardHeader>
-              <CardContent>
+                <Button variant="outline" size="sm">
+                  <Eye className="w-4 h-4 mr-2" />
+                  View
+                </Button>
+              </div>
+              
+              <div className="mt-4 p-3 bg-muted rounded-lg">
                 <p className="text-sm text-muted-foreground">
-                  {claim.files.length} file(s) uploaded and processed by AI
+                  ✓ All {claim.files.length} documents have been processed and analyzed by AI agents
                 </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

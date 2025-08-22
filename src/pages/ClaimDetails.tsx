@@ -12,7 +12,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Pencil, Save, X } from "lucide-react";
 
-const getAgentOutput = (agentId: string, claim: any) => {
+const getAgentOutput = (agentId: string, claim: any, editedData?: any) => {
+  // Use edited data if available
+  const data = editedData || claim;
+  
   switch (agentId) {
     case "fnol-intake":
       return `EXTRACTED CLAIM INFORMATION FROM UPLOADED DOCUMENTS:
@@ -39,14 +42,14 @@ const getAgentOutput = (agentId: string, claim: any) => {
 ✓ Vehicle Make/Model: 2020 Ford Transit Van
 
 STRUCTURED DATA EXTRACTED:
-✓ Policy Number: ${claim.policyNumber || 'POL-789456'}
-✓ Fleet Owner: ${claim.fleetOwner || 'ABC Logistics Inc.'}
-✓ Driver Name: ${claim.name || 'John Smith'}
-✓ Contact Phone: ${claim.phone || '(555) 123-4567'}
-✓ Contact Email: ${claim.email || 'john@abclogistics.com'}
-✓ Loss Type: ${claim.lossType || 'Auto Collision'}
-✓ Vehicles Involved: ${claim.vehiclesInvolved?.length > 0 ? claim.vehiclesInvolved.join(', ') : 'AUTO-001'}
-✓ Incident Description: ${claim.description || 'Rear-end collision during heavy traffic causing front-end damage to vehicle'}`;
+✓ Policy Number: ${data.policyNumber || claim.policyNumber || 'POL-789456'}
+✓ Fleet Owner: ${data.fleetOwner || claim.fleetOwner || 'ABC Logistics Inc.'}
+✓ Driver Name: ${data.driverName || claim.name || 'John Smith'}
+✓ Contact Phone: ${data.phone || claim.phone || '(555) 123-4567'}
+✓ Contact Email: ${data.email || claim.email || 'john@abclogistics.com'}
+✓ Loss Type: ${data.lossType || claim.lossType || 'Auto Collision'}
+✓ Vehicles Involved: ${data.vehiclesInvolved || (claim.vehiclesInvolved?.length > 0 ? claim.vehiclesInvolved.join(', ') : 'AUTO-001')}
+✓ Incident Description: ${data.description || claim.description || 'Rear-end collision during heavy traffic causing front-end damage to vehicle'}`;
 
     case "validation":
       return `VALIDATION RESULTS:
@@ -204,7 +207,15 @@ This payout covers 100% of verified repair costs minus the contractual deductibl
 PAYMENT AUTHORIZATION: ✅ APPROVED FOR IMMEDIATE PROCESSING`;
 
     case "communication":
-      return `COMMUNICATION DRAFTED:
+      return data.emailContent && data.adjusterNotes ? 
+        `${data.emailContent}
+
+---
+
+ADJUSTER SUMMARY & NOTES:
+
+${data.adjusterNotes}` :
+        `COMMUNICATION DRAFTED:
 
 EMAIL COMPOSITION:
 Subject: Claim Settlement Approved - Payment Processing [Claim #${claim.id}]
@@ -326,6 +337,7 @@ export default function ClaimDetails() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [editingAgent, setEditingAgent] = useState<string | null>(null);
   const [editData, setEditData] = useState<any>({});
+  const [agentEditedData, setAgentEditedData] = useState<Record<string, any>>({});
   
   const claim = getClaim(id!);
   
@@ -514,16 +526,48 @@ export default function ClaimDetails() {
         };
       case "communication":
         return {
-          emailSubject: `Claim Settlement Approved - Payment Processing [Claim #${claim?.id}]`,
-          recipientName: claim?.name || 'John Smith',
-          claimNumber: claim?.id || '',
-          incidentDate: claim?.incidentDate || '2024-01-15',
-          vehicle: claim?.vehiclesInvolved?.[0] || 'AUTO-001',
-          settlementAmount: '$15,500',
-          paymentTimeline: '2-3 business days',
-          adjusterNotes: 'Straightforward collision claim with clear liability',
-          followUpScheduled: 'Within 30 days',
-          recommendedStatus: 'Preferred customer status'
+          emailContent: `EMAIL COMPOSITION:
+Subject: Claim Settlement Approved - Payment Processing [Claim #${claim?.id}]
+
+Dear ${claim?.name || 'John Smith'},
+
+We are pleased to inform you that your insurance claim has been processed and approved for payment.
+
+CLAIM SUMMARY:
+• Claim Number: ${claim?.id || ''}
+• Incident Date: ${claim?.incidentDate || '2024-01-15'}
+• Vehicle: ${claim?.vehiclesInvolved?.[0] || 'AUTO-001'}
+• Settlement Amount: $15,500
+
+PAYMENT DETAILS:
+Your settlement check will be processed within 2-3 business days via direct deposit to your registered account. Please ensure your banking information is current.
+
+NEXT STEPS:
+1. You will receive payment confirmation via email
+2. Retain all repair receipts for your records  
+3. Contact us if you need assistance with repair shop recommendations
+
+Best regards,
+Claims Department`,
+          adjusterNotes: `CASE SUMMARY FOR FILE:
+• Straightforward collision claim with clear liability
+• All documentation complete and verified
+• No complications or disputes identified
+• Standard processing timeline maintained
+
+ADJUSTER ACTION ITEMS:
+✓ Review and approve final settlement letter
+✓ Verify banking details before payment release
+✓ Schedule follow-up call in 30 days
+✓ Update claim status to "Settlement Paid"
+✓ Archive all documentation in claim file
+
+RECOMMENDATIONS:
+• Consider this claimant for preferred status (clean history)
+• No fraud indicators - standard file closure
+• Customer satisfaction survey recommended post-settlement
+
+FILE STATUS: Ready for final review and payment authorization`
         };
       default:
         return {};
@@ -537,6 +581,12 @@ export default function ClaimDetails() {
 
   const handleSaveAgent = () => {
     if (!claim || !editingAgent) return;
+    
+    // Store edited data for this agent
+    setAgentEditedData(prev => ({
+      ...prev,
+      [editingAgent]: { ...editData }
+    }));
     
     // Update core claim data if FNOL agent is being edited
     if (editingAgent === 'fnol-intake') {
@@ -613,10 +663,48 @@ export default function ClaimDetails() {
 
   const renderEditableAgentOutput = (agentId: string, claim: any) => {
     if (editingAgent === agentId) {
+      // Special handling for communication agent
+      if (agentId === 'communication') {
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Email Content</label>
+              <Textarea 
+                value={editData.emailContent || ''}
+                onChange={(e) => setEditData({...editData, emailContent: e.target.value})}
+                className="mt-1 font-mono text-sm"
+                rows={15}
+                placeholder="Enter email content..."
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Adjuster Notes</label>
+              <Textarea 
+                value={editData.adjusterNotes || ''}
+                onChange={(e) => setEditData({...editData, adjusterNotes: e.target.value})}
+                className="mt-1 font-mono text-sm"
+                rows={12}
+                placeholder="Enter adjuster notes..."
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={handleSaveAgent}>
+                <Save className="w-4 h-4 mr-2" />
+                Save Changes
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+                <X className="w-4 h-4 mr-2" />
+                Cancel
+              </Button>
+            </div>
+          </div>
+        );
+      }
+      
+      // Regular form for other agents
       const fields = getAgentEditFields(agentId);
       const fieldNames = Object.keys(fields);
       
-      // Render dynamic form based on agent's specific fields
       return (
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -675,11 +763,20 @@ export default function ClaimDetails() {
       );
     } else {
       // Render static output with edit button
+      const hasEdits = agentEditedData[agentId];
       return (
         <div>
+          {hasEdits && (
+            <div className="mb-2 flex items-center gap-2 text-xs text-blue-600">
+              <Badge variant="secondary" className="bg-blue-50 text-blue-700">
+                Edited
+              </Badge>
+              <span>This output has been modified</span>
+            </div>
+          )}
           <div className="bg-gray-50 rounded-lg p-3 mb-3">
             <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono">
-              {getAgentOutput(agentId, claim)}
+              {getAgentOutput(agentId, claim, agentEditedData[agentId])}
             </pre>
           </div>
           <Button 

@@ -492,9 +492,9 @@ export default function ClaimDetails() {
               {/* Agent Pipeline Visualization */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
                 {agentPipeline.map((agent, index) => {
-                  const isCompleted = completedAgents >= index;
-                  const isCurrent = claim.currentAgent === agent.id;
-                  const isPending = completedAgents < index;
+                  const isApproved = claim.status === "approved";
+                  const isCompleted = isApproved || completedAgents >= index;
+                  const isCurrent = !isApproved && claim.currentAgent === agent.id;
                   
                   return (
                     <div
@@ -515,7 +515,7 @@ export default function ClaimDetails() {
                             ? "bg-green-500 text-white" 
                             : "bg-gray-300 text-gray-600"
                         }`}>
-                          {isCompleted ? (
+                          {isCompleted && !isCurrent ? (
                             <CheckCircle className="w-6 h-6" />
                           ) : isCurrent ? (
                             <Clock className="w-6 h-6 animate-spin" />

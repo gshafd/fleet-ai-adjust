@@ -11,85 +11,244 @@ import { useEffect, useState } from "react";
 const getAgentOutput = (agentId: string, claim: any) => {
   switch (agentId) {
     case "fnol-intake":
-      return `EXTRACTED CLAIM INFORMATION:
+      return `EXTRACTED CLAIM INFORMATION FROM UPLOADED DOCUMENTS:
+
+📄 POLICE REPORT ANALYSIS:
+✓ Incident Date: ${claim.incidentDate} at ${claim.incidentTime}
+✓ Location: ${claim.location}
+✓ Weather Conditions: Clear, dry roads
+✓ Officer Badge: #4721 - Officer Martinez
+✓ Report Number: PR-2024-089456
+
+📄 DRIVER LICENSE SCAN:
+✓ License Number: DL789456123
+✓ Expiry Date: 12/2026 (Valid)
+✓ CDL Status: Commercial Driver License Active
+✓ Restrictions: None
+✓ Previous Violations: Clean record
+
+📄 VEHICLE PHOTOS ANALYSIS:
+✓ Damage Location: Front bumper, hood, left headlight
+✓ Damage Severity: Moderate impact damage
+✓ VIN Extracted: 1HGBH41JXMN109186
+✓ License Plate: FL-ABC123
+✓ Vehicle Make/Model: 2020 Ford Transit Van
+
+STRUCTURED DATA EXTRACTED:
 ✓ Policy Number: ${claim.policyNumber}
 ✓ Fleet Owner: ${claim.fleetOwner}
-✓ Claimant Name: ${claim.name}
+✓ Driver Name: ${claim.name}
 ✓ Contact Phone: ${claim.phone}
 ✓ Contact Email: ${claim.email}
-✓ Incident Date: ${claim.incidentDate}
-✓ Incident Time: ${claim.incidentTime}
-✓ Location: ${claim.location}
 ✓ Loss Type: ${claim.lossType}
 ✓ Vehicles Involved: ${claim.vehiclesInvolved.join(', ')}
-✓ Description: ${claim.description}
-✓ Files Processed: ${claim.files.length} documents analyzed`;
+✓ Incident Description: ${claim.description}`;
 
     case "validation":
       return `VALIDATION RESULTS:
-✓ Policy verified as active
+
+POLICY VALIDATION:
+✓ Policy ${claim.policyNumber} verified as ACTIVE
+✓ Premium payments up to date
 ✓ Fleet registration confirmed for ${claim.fleetOwner}
-✓ Driver license validated
-✓ Vehicle VIN verification passed
-✓ Coverage period validated
-✓ Claim is valid for processing`;
+✓ Coverage effective from: 01/01/2024 to 12/31/2024
+
+DRIVER VALIDATION:
+✓ Driver license DL789456123 validated with DMV
+✓ Commercial driving privileges: ACTIVE
+✓ No license suspensions found
+✓ Driver authorized on policy roster
+
+VEHICLE VALIDATION:
+✓ VIN 1HGBH41JXMN109186 matches policy records
+✓ Vehicle registration current and valid
+✓ Safety inspection up to date
+✓ Vehicle covered under commercial fleet policy
+
+FINAL VALIDATION: ✅ CLAIM IS VALID FOR PROCESSING`;
 
     case "fraud-detection":
       return `FRAUD ANALYSIS COMPLETE:
-✓ No duplicate claims found in system
-✓ Incident location verified via GPS data
-✓ Timeline analysis passed - consistent story
-✓ No prior suspicious activity detected
-✓ Fraud risk score: 15/100 (Low Risk)
-✓ No flags detected - proceeding with claim`;
+
+DUPLICATE CLAIM ANALYSIS:
+✓ No duplicate claims found for this incident
+✓ No similar claims from same driver in past 12 months
+✓ Location cross-reference: No pattern of claims at this location
+
+INCIDENT VERIFICATION:
+✓ GPS data confirms vehicle was at reported location
+✓ Timeline analysis: Story is consistent and logical
+✓ Weather data matches police report conditions
+✓ Traffic camera footage request submitted
+
+BEHAVIORAL ANALYSIS:
+✓ Driver's claim history: 2 claims in 5 years (Normal)
+✓ No suspicious activity patterns detected
+✓ Claim amount reasonable for damage type
+✓ Reporting time: 2 hours after incident (Normal)
+
+FRAUD RISK ASSESSMENT:
+✓ Overall Risk Score: 15/100 (LOW RISK)
+✓ No red flags identified
+✓ Recommended Action: PROCEED WITH STANDARD PROCESSING`;
 
     case "claim-creation":
       return `CLAIM CREATED SUCCESSFULLY:
+
+CLAIM DETAILS:
 ✓ Claim Number: ${claim.id}
-✓ Created in system: ${claim.submittedAt.toLocaleDateString()}
+✓ Created Date: ${claim.submittedAt.toLocaleDateString()}
+✓ Claim Type: Commercial Vehicle Collision
+✓ Priority Level: Standard Processing
+
+ADJUSTER ASSIGNMENT:
 ✓ Assigned Adjuster: ${claim.assignedAdjuster}
-✓ Priority Level: Standard
-✓ SLA Target: 5 business days
-✓ Workflow initiated`;
+✓ Adjuster Experience: 8 years commercial claims
+✓ Current Workload: 23 active claims
+✓ Specialization: Fleet vehicle damages
+✓ Contact: sarah.johnson@insurance.com
+
+SERVICE LEVEL AGREEMENT:
+✓ Initial Contact: Within 24 hours
+✓ Inspection Scheduled: Within 72 hours
+✓ Settlement Target: 5-7 business days
+✓ Workflow Status: INITIATED AND ACTIVE`;
 
     case "coverage-verification":
       return `COVERAGE VERIFICATION:
-✓ Policy Type: Commercial Fleet Insurance
-✓ Coverage Active: Yes
-✓ ${claim.lossType} coverage confirmed
-✓ Deductible Amount: $2,500
-✓ Policy limits verified
-✓ Coverage applicable for this incident
-✓ No exclusions apply`;
+
+POLICY ANALYSIS:
+✓ Policy Type: Commercial Fleet Insurance - Premium Plan
+✓ Policy Holder: ${claim.fleetOwner}
+✓ Coverage Period: ACTIVE (Jan 1, 2024 - Dec 31, 2024)
+✓ Annual Premium: $24,500 (Paid in full)
+
+COVERAGE VERIFICATION REASONING:
+✓ Collision Coverage: $50,000 limit - APPLIES to this claim
+✓ Vehicle was being used for commercial purposes - COVERED
+✓ Driver was authorized and properly licensed - COVERED
+✓ Incident occurred during policy period - COVERED
+✓ No policy exclusions apply to this type of loss
+
+DEDUCTIBLE & LIMITS:
+✓ Collision Deductible: $2,500 per incident
+✓ Remaining Policy Limit: $47,500 available
+✓ Previous Claims This Year: 1 ($3,200 paid)
+
+COVERAGE DETERMINATION: ✅ INCIDENT IS FULLY COVERED
+Reason: Standard collision during commercial use with authorized driver`;
 
     case "damage-assessment":
       return `DAMAGE ASSESSMENT COMPLETE:
-✓ Vehicle damage assessed from uploaded photos
-✓ Repair estimate calculated: $18,000
-✓ Total loss threshold: $25,000 (Not exceeded)
-✓ Repairable damage confirmed
-✓ Labor costs: $8,000
-✓ Parts costs: $10,000
-✓ Assessment confidence: 95%`;
+
+PHOTO ANALYSIS RESULTS:
+✓ Front bumper: Cracked and needs replacement - $1,200
+✓ Hood: Dented and requires body work - $2,400
+✓ Left headlight assembly: Damaged, needs replacement - $450
+✓ Grille: Broken, replacement needed - $380
+✓ Front left fender: Minor dents, paintwork needed - $800
+
+ASSESSMENT METHODOLOGY:
+The AI analyzed 12 high-resolution photos using computer vision:
+• Damage severity scoring based on visual indicators
+• Parts identification using vehicle database matching
+• Cost estimation using regional labor rates ($95/hour)
+• Parts pricing from OEM and aftermarket suppliers
+
+REPAIR ESTIMATE BREAKDOWN:
+✓ Labor Costs: $8,000 (84 hours @ $95/hour)
+  - Body work: 45 hours
+  - Paint preparation: 24 hours
+  - Assembly/alignment: 15 hours
+✓ Parts Costs: $10,000
+  - OEM parts: $8,500
+  - Paint materials: $1,500
+✓ Total Repair Cost: $18,000
+
+TOTAL LOSS ASSESSMENT:
+✓ Vehicle Value (ACV): $32,000
+✓ Total Loss Threshold: $25,000 (80% of ACV)
+✓ Repair Cost: $18,000
+✓ Status: REPAIRABLE (Cost below threshold)
+✓ Assessment Confidence: 95% (High accuracy)`;
 
     case "settlement-payout":
       return `SETTLEMENT CALCULATION:
-✓ Gross settlement amount: $18,000
-✓ Less deductible: -$2,500
-✓ Net payout amount: $${claim.payoutEstimate.toLocaleString()}
-✓ Payment method: Direct deposit
-✓ Processing fee: $0
-✓ Settlement approved for payment`;
+
+PAYOUT CALCULATION REASONING:
+The settlement amount is calculated based on verified damage assessment, policy terms, and applicable deductibles:
+
+GROSS SETTLEMENT:
+✓ Total Repair Costs: $18,000
+✓ Supplemental Estimates: $0 (None required)
+✓ Gross Amount Before Deductions: $18,000
+
+DEDUCTIONS APPLIED:
+✓ Policy Deductible: -$2,500 (Per policy terms)
+✓ Betterment/Depreciation: $0 (Not applicable)
+✓ Previous Damage: $0 (None identified)
+
+FINAL SETTLEMENT:
+✓ Net Payout Amount: $15,500
+✓ Payment Method: ACH Direct Deposit
+✓ Tax Implications: Not applicable (vehicle repair)
+✓ Processing Fee: $0
+
+SETTLEMENT JUSTIFICATION:
+This payout covers 100% of verified repair costs minus the contractual deductible. The amount is fair and within policy limits, ensuring the insured can restore their vehicle to pre-loss condition.
+
+PAYMENT AUTHORIZATION: ✅ APPROVED FOR IMMEDIATE PROCESSING`;
 
     case "communication":
       return `COMMUNICATION DRAFTED:
-✓ Settlement notification email prepared
-✓ Payment instructions included
-✓ Claim summary attached
-✓ Next steps outlined for claimant
-✓ Adjuster copy prepared
-✓ Ready for claims representative review
-✓ Estimated delivery: Within 24 hours`;
+
+EMAIL COMPOSITION:
+Subject: Claim Settlement Approved - Payment Processing [Claim #${claim.id}]
+
+Dear ${claim.name},
+
+We are pleased to inform you that your insurance claim has been processed and approved for payment.
+
+CLAIM SUMMARY:
+• Claim Number: ${claim.id}
+• Incident Date: ${claim.incidentDate}
+• Vehicle: ${claim.vehiclesInvolved[0]}
+• Settlement Amount: $15,500
+
+PAYMENT DETAILS:
+Your settlement check will be processed within 2-3 business days via direct deposit to your registered account. Please ensure your banking information is current.
+
+NEXT STEPS:
+1. You will receive payment confirmation via email
+2. Retain all repair receipts for your records  
+3. Contact us if you need assistance with repair shop recommendations
+
+Best regards,
+Claims Department
+
+---
+
+ADJUSTER SUMMARY & NOTES:
+
+CASE SUMMARY FOR FILE:
+• Straightforward collision claim with clear liability
+• All documentation complete and verified
+• No complications or disputes identified
+• Standard processing timeline maintained
+
+ADJUSTER ACTION ITEMS:
+✓ Review and approve final settlement letter
+✓ Verify banking details before payment release
+✓ Schedule follow-up call in 30 days
+✓ Update claim status to "Settlement Paid"
+✓ Archive all documentation in claim file
+
+RECOMMENDATIONS:
+• Consider this claimant for preferred status (clean history)
+• No fraud indicators - standard file closure
+• Customer satisfaction survey recommended post-settlement
+
+FILE STATUS: Ready for final review and payment authorization`;
 
     default:
       return "Processing...";
@@ -247,6 +406,11 @@ export default function ClaimDetails() {
   const currentAgentIndex = agentPipeline.findIndex(agent => agent.id === claim.currentAgent);
   const completedAgents = currentAgentIndex >= 0 ? currentAgentIndex : -1;
 
+  const handleViewDocument = (docName: string) => {
+    // Simulate document viewing - in real app this would open a modal or new window
+    alert(`Opening ${docName}... (This would open the actual document in a real application)`);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -353,134 +517,145 @@ export default function ClaimDetails() {
                   );
                 })}
               </div>
-              
-              {/* Agent Outputs */}
-              {completedAgents >= 0 && (
-                <div className="mt-8 space-y-4">
-                  <h3 className="text-lg font-semibold">Agent Processing Results</h3>
-                  {agentPipeline.slice(0, completedAgents + 1).map((agent, index) => {
-                    const isCompleted = completedAgents > index;
-                    const isCurrent = claim.currentAgent === agent.id;
-                    
-                    if (!isCompleted && !isCurrent) return null;
-                    
-                    return (
-                      <Card key={agent.id} className={`${isCurrent ? 'border-primary' : 'border-green-200'}`}>
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-3">
-                            <div className={`inline-flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0 ${
-                              isCurrent 
-                                ? "bg-primary text-primary-foreground" 
-                                : "bg-green-500 text-white"
-                            }`}>
-                              {isCurrent ? (
-                                <Clock className="w-5 h-5 animate-spin" />
-                              ) : (
-                                <CheckCircle className="w-5 h-5" />
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <h4 className="font-semibold">{agent.name}</h4>
-                                {isCurrent && (
-                                  <Badge variant="default" className="text-xs">
-                                    Processing...
-                                  </Badge>
-                                )}
-                                {isCompleted && (
-                                  <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
-                                    Completed
-                                  </Badge>
-                                )}
-                              </div>
-                              {(isCompleted || (isCurrent && Math.random() > 0.5)) && (
-                                <div className="bg-gray-50 rounded-lg p-3 mt-2">
-                                  <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono">
-                                    {getAgentOutput(agent.id, claim)}
-                                  </pre>
-                                </div>
-                              )}
-                              {isCurrent && Math.random() <= 0.5 && (
-                                <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-                                  <Clock className="w-4 h-4 animate-spin" />
-                                  Processing documents and analyzing data...
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-               )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Uploaded Documents */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5" />
+        {/* Compact Uploaded Documents */}
+        <Card className="mb-8">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <FileText className="w-4 h-4" />
               Uploaded Documents
             </CardTitle>
-            <CardDescription>
-              Files submitted with the claim and processed by AI agents
-            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 rounded-lg border">
-                <div className="flex items-center gap-3">
-                  <FileText className="w-8 h-8 text-muted-foreground" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="flex items-center justify-between p-2 rounded border bg-muted/20">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-primary" />
                   <div>
-                    <p className="font-medium">Police Report</p>
-                    <p className="text-sm text-muted-foreground">accident-report.pdf • 2.4 MB</p>
+                    <p className="text-sm font-medium">Police Report</p>
+                    <p className="text-xs text-muted-foreground">2.4 MB</p>
                   </div>
                 </div>
-                <Button variant="outline" size="sm">
-                  <Eye className="w-4 h-4 mr-2" />
-                  View
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-7 w-7 p-0"
+                  onClick={() => handleViewDocument("Police Report")}
+                >
+                  <Eye className="w-4 h-4" />
                 </Button>
               </div>
               
-              <div className="flex items-center justify-between p-3 rounded-lg border">
-                <div className="flex items-center gap-3">
-                  <FileText className="w-8 h-8 text-muted-foreground" />
+              <div className="flex items-center justify-between p-2 rounded border bg-muted/20">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-primary" />
                   <div>
-                    <p className="font-medium">Vehicle Photos</p>
-                    <p className="text-sm text-muted-foreground">damage-photos.zip • 8.7 MB</p>
+                    <p className="text-sm font-medium">Vehicle Photos</p>
+                    <p className="text-xs text-muted-foreground">8.7 MB</p>
                   </div>
                 </div>
-                <Button variant="outline" size="sm">
-                  <Eye className="w-4 h-4 mr-2" />
-                  View
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-7 w-7 p-0"
+                  onClick={() => handleViewDocument("Vehicle Photos")}
+                >
+                  <Eye className="w-4 h-4" />
                 </Button>
               </div>
               
-              <div className="flex items-center justify-between p-3 rounded-lg border">
-                <div className="flex items-center gap-3">
-                  <FileText className="w-8 h-8 text-muted-foreground" />
+              <div className="flex items-center justify-between p-2 rounded border bg-muted/20">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-primary" />
                   <div>
-                    <p className="font-medium">Driver License</p>
-                    <p className="text-sm text-muted-foreground">license-scan.jpg • 1.2 MB</p>
+                    <p className="text-sm font-medium">Driver License</p>
+                    <p className="text-xs text-muted-foreground">1.2 MB</p>
                   </div>
                 </div>
-                <Button variant="outline" size="sm">
-                  <Eye className="w-4 h-4 mr-2" />
-                  View
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-7 w-7 p-0"
+                  onClick={() => handleViewDocument("Driver License")}
+                >
+                  <Eye className="w-4 h-4" />
                 </Button>
               </div>
-              
-              <div className="mt-4 p-3 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  ✓ All {claim.files.length} documents have been processed and analyzed by AI agents
-                </p>
-              </div>
+            </div>
+            <div className="mt-3 text-center">
+              <p className="text-xs text-muted-foreground">
+                ✓ All {claim.files.length} documents processed by AI agents
+              </p>
             </div>
           </CardContent>
         </Card>
+
+        {/* Agent Processing Results - Always Visible */}
+        {completedAgents >= 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+              <h2 className="text-xl font-semibold">AI Agent Processing Results</h2>
+            </div>
+            {agentPipeline.slice(0, completedAgents + 1).map((agent, index) => {
+              const isCompleted = completedAgents > index;
+              const isCurrent = claim.currentAgent === agent.id;
+              
+              if (!isCompleted && !isCurrent) return null;
+              
+              return (
+                <Card key={agent.id} className={`${isCurrent ? 'border-primary' : 'border-green-200'}`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className={`inline-flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0 ${
+                        isCurrent 
+                          ? "bg-primary text-primary-foreground" 
+                          : "bg-green-500 text-white"
+                      }`}>
+                        {isCurrent ? (
+                          <Clock className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <CheckCircle className="w-5 h-5" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="font-semibold">{agent.name}</h4>
+                          {isCurrent && (
+                            <Badge variant="default" className="text-xs">
+                              Processing...
+                            </Badge>
+                          )}
+                          {isCompleted && (
+                            <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
+                              Completed
+                            </Badge>
+                          )}
+                        </div>
+                        {(isCompleted || isCurrent) && (
+                          <div className="bg-gray-50 rounded-lg p-3 mt-2">
+                            <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono">
+                              {getAgentOutput(agent.id, claim)}
+                            </pre>
+                          </div>
+                        )}
+                        {isCurrent && !isCompleted && (
+                          <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+                            <Clock className="w-4 h-4 animate-spin" />
+                            Processing documents and analyzing data...
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

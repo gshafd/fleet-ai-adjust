@@ -627,14 +627,14 @@ export default function ClaimDetails() {
         </Card>
 
         {/* Agent Processing Results - Always Visible */}
-        {completedAgents >= 0 && (
+        {(completedAgents >= 0 || claim.status === "approved") && (
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
               <CheckCircle className="w-5 h-5 text-green-600" />
               <h2 className="text-xl font-semibold">AI Agent Processing Results</h2>
             </div>
-            {agentPipeline.slice(0, Math.max(completedAgents + 1, claim.status === "approved" ? agentPipeline.length : completedAgents + 1)).map((agent, index) => {
-              const isCompleted = completedAgents > index || claim.status === "approved";
+            {agentPipeline.slice(0, claim.status === "approved" ? agentPipeline.length : completedAgents + 1).map((agent, index) => {
+              const isCompleted = claim.status === "approved" || completedAgents > index;
               const isCurrent = claim.currentAgent === agent.id && claim.status !== "approved";
               
               return (
@@ -660,12 +660,13 @@ export default function ClaimDetails() {
                               Processing...
                             </Badge>
                           )}
-                          {isCompleted && (
+                          {isCompleted && !isCurrent && (
                             <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
                               Completed
                             </Badge>
                           )}
                         </div>
+                        {/* Always show output once agent has been processed */}
                         <div className="bg-gray-50 rounded-lg p-3 mt-2">
                           <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono">
                             {getAgentOutput(agent.id, claim)}

@@ -7,6 +7,10 @@ import { Progress } from "@/components/ui/progress";
 import { useClaims } from "@/context/ClaimsContext";
 import { ArrowLeft, FileText, Shield, AlertTriangle, CheckCircle, Calculator, Mail, Eye, Clock, Zap, Car } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { Pencil, Save, X } from "lucide-react";
 
 const getAgentOutput = (agentId: string, claim: any) => {
   switch (agentId) {
@@ -318,7 +322,10 @@ export default function ClaimDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { getClaim, updateClaim } = useClaims();
+  const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [editingAgent, setEditingAgent] = useState<string | null>(null);
+  const [editData, setEditData] = useState<any>({});
   
   const claim = getClaim(id!);
   
@@ -406,6 +413,57 @@ export default function ClaimDetails() {
   const currentAgentIndex = agentPipeline.findIndex(agent => agent.id === claim.currentAgent);
   const completedAgents = currentAgentIndex >= 0 ? currentAgentIndex : -1;
 
+  const handleEditAgent = (agentId: string) => {
+    setEditingAgent(agentId);
+    // Initialize edit data based on current claim data
+    setEditData({
+      policyNumber: claim?.policyNumber || '',
+      fleetOwner: claim?.fleetOwner || '',
+      name: claim?.name || '',
+      phone: claim?.phone || '',
+      email: claim?.email || '',
+      incidentDate: claim?.incidentDate || '',
+      incidentTime: claim?.incidentTime || '',
+      location: claim?.location || '',
+      lossType: claim?.lossType || '',
+      description: claim?.description || '',
+      vehiclesInvolved: claim?.vehiclesInvolved?.join(', ') || ''
+    });
+  };
+
+  const handleSaveAgent = () => {
+    if (!claim || !editingAgent) return;
+    
+    const updatedClaim = {
+      ...claim,
+      policyNumber: editData.policyNumber,
+      fleetOwner: editData.fleetOwner,
+      name: editData.name,
+      phone: editData.phone,
+      email: editData.email,
+      incidentDate: editData.incidentDate,
+      incidentTime: editData.incidentTime,
+      location: editData.location,
+      lossType: editData.lossType,
+      description: editData.description,
+      vehiclesInvolved: editData.vehiclesInvolved.split(',').map((v: string) => v.trim()).filter(Boolean)
+    };
+
+    updateClaim(claim.id, updatedClaim);
+    setEditingAgent(null);
+    setEditData({});
+    
+    toast({
+      title: "Information Updated",
+      description: "Agent output has been successfully updated."
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingAgent(null);
+    setEditData({});
+  };
+
   const handleViewDocument = (docName: string) => {
     // Create a mock document viewer - simulates opening the actual file
     const newWindow = window.open('', '_blank');
@@ -441,6 +499,139 @@ export default function ClaimDetails() {
           </body>
         </html>
       `);
+    }
+  };
+
+  const renderEditableAgentOutput = (agentId: string, claim: any) => {
+    if (editingAgent === agentId) {
+      // Render editable form for key fields
+      return (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Policy Number</label>
+              <Input 
+                value={editData.policyNumber}
+                onChange={(e) => setEditData({...editData, policyNumber: e.target.value})}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Fleet Owner</label>
+              <Input 
+                value={editData.fleetOwner}
+                onChange={(e) => setEditData({...editData, fleetOwner: e.target.value})}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Driver Name</label>
+              <Input 
+                value={editData.name}
+                onChange={(e) => setEditData({...editData, name: e.target.value})}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Phone</label>
+              <Input 
+                value={editData.phone}
+                onChange={(e) => setEditData({...editData, phone: e.target.value})}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Email</label>
+              <Input 
+                value={editData.email}
+                onChange={(e) => setEditData({...editData, email: e.target.value})}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Loss Type</label>
+              <Input 
+                value={editData.lossType}
+                onChange={(e) => setEditData({...editData, lossType: e.target.value})}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Incident Date</label>
+              <Input 
+                type="date"
+                value={editData.incidentDate}
+                onChange={(e) => setEditData({...editData, incidentDate: e.target.value})}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Incident Time</label>
+              <Input 
+                type="time"
+                value={editData.incidentTime}
+                onChange={(e) => setEditData({...editData, incidentTime: e.target.value})}
+                className="mt-1"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">Location</label>
+            <Input 
+              value={editData.location}
+              onChange={(e) => setEditData({...editData, location: e.target.value})}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">Vehicles Involved (comma-separated)</label>
+            <Input 
+              value={editData.vehiclesInvolved}
+              onChange={(e) => setEditData({...editData, vehiclesInvolved: e.target.value})}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">Incident Description</label>
+            <Textarea 
+              value={editData.description}
+              onChange={(e) => setEditData({...editData, description: e.target.value})}
+              className="mt-1"
+              rows={3}
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button size="sm" onClick={handleSaveAgent}>
+              <Save className="w-4 h-4 mr-2" />
+              Save Changes
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+              <X className="w-4 h-4 mr-2" />
+              Cancel
+            </Button>
+          </div>
+        </div>
+      );
+    } else {
+      // Render static output with edit button
+      return (
+        <div>
+          <div className="bg-gray-50 rounded-lg p-3 mb-3">
+            <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono">
+              {getAgentOutput(agentId, claim)}
+            </pre>
+          </div>
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => handleEditAgent(agentId)}
+            className="text-xs"
+          >
+            <Pencil className="w-3 h-3 mr-2" />
+            Edit Information
+          </Button>
+        </div>
+      );
     }
   };
 
@@ -667,10 +858,8 @@ export default function ClaimDetails() {
                           )}
                         </div>
                         {/* Always show output once agent has been processed */}
-                        <div className="bg-gray-50 rounded-lg p-3 mt-2">
-                          <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono">
-                            {getAgentOutput(agent.id, claim)}
-                          </pre>
+                        <div className="mt-2">
+                          {renderEditableAgentOutput(agent.id, claim)}
                         </div>
                         {isCurrent && !isCompleted && (
                           <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">

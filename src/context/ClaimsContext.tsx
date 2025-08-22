@@ -43,7 +43,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       status: "processing",
       assignedAdjuster: "Sarah Johnson",
       payoutEstimate: 45000,
-      currentAgent: "damage-assessment",
+      currentAgent: "fnol-intake",
       progress: 60,
       submittedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
       name: "John Smith",

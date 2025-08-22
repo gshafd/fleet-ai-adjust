@@ -10,39 +10,68 @@ import { useEffect, useState } from "react";
 
 const agentPipeline = [
   { 
-    id: "document-review", 
-    name: "Document Review", 
+    id: "fnol-intake", 
+    name: "FNOL Intake Agent", 
     icon: FileText, 
     color: "blue",
-    description: "Analyzing uploaded documents and extracting key information"
+    description: "Captures loss details, claimant details, policy details from forms, images, PDFs",
+    output: "✓ Extracted incident date: 2024-01-15\n✓ Captured claimant: John Smith\n✓ Policy number: POL-789456\n✓ Loss type: Collision identified"
   },
   { 
-    id: "data-extraction", 
-    name: "Data Extraction", 
-    icon: Zap, 
-    color: "purple",
-    description: "Extracting structured data from claim documents"
+    id: "validation", 
+    name: "Validation Agent", 
+    icon: Shield, 
+    color: "indigo",
+    description: "Cross-checks policies, fleets, drivers and validates claim validity",
+    output: "✓ Policy verified as active\n✓ Driver license validated\n✓ Fleet registration confirmed\n✓ Claim is valid for processing"
   },
   { 
     id: "fraud-detection", 
-    name: "Fraud Detection", 
+    name: "Fraud Detection Agent", 
     icon: AlertTriangle, 
     color: "orange",
-    description: "Running fraud detection algorithms and risk assessment"
+    description: "Detects suspicious claims, staged accidents, and duplicate claims",
+    output: "✓ No duplicate claims found\n✓ Incident location verified\n✓ Timeline analysis passed\n✓ Low fraud risk score: 15/100"
+  },
+  { 
+    id: "claim-creation", 
+    name: "Claim Creation Agent", 
+    icon: Zap, 
+    color: "purple",
+    description: "Creates claim in system, generates claim number and assigns adjuster",
+    output: "✓ Claim created: CL-2024-757070\n✓ Assigned adjuster: Sarah Johnson\n✓ Priority level: Standard\n✓ SLA: 5 business days"
+  },
+  { 
+    id: "coverage-verification", 
+    name: "Coverage Verification Agent", 
+    icon: CheckCircle, 
+    color: "green",
+    description: "Verifies coverage by cross-checking policy information",
+    output: "✓ Collision coverage confirmed\n✓ Deductible: $2,500\n✓ Policy limits verified\n✓ Coverage applicable for this incident"
   },
   { 
     id: "damage-assessment", 
-    name: "Damage Assessment", 
+    name: "Damage Assessment Agent", 
     icon: Car, 
-    color: "green",
-    description: "Analyzing damage reports and estimating repair costs"
+    color: "emerald",
+    description: "Assesses damage based on evidence and estimates repair costs",
+    output: "✓ Vehicle damage assessed\n✓ Repair estimate: $18,000\n✓ Total loss threshold: Not exceeded\n✓ Repairable damage confirmed"
   },
   { 
-    id: "approval-agent", 
-    name: "Final Approval", 
-    icon: CheckCircle, 
-    color: "emerald",
-    description: "Final review and claim approval processing"
+    id: "settlement-payout", 
+    name: "Settlement Payout Agent", 
+    icon: Calculator, 
+    color: "cyan",
+    description: "Estimates payout with deductibles and liability applied",
+    output: "✓ Gross settlement: $18,000\n✓ Less deductible: $2,500\n✓ Net payout: $15,500\n✓ Payment approved"
+  },
+  { 
+    id: "communication", 
+    name: "Communication Agent", 
+    icon: Mail, 
+    color: "rose",
+    description: "Drafts professional payout email for claims representative",
+    output: "✓ Settlement letter drafted\n✓ Payment instructions included\n✓ Next steps outlined\n✓ Ready for review and sending"
   },
 ];
 
@@ -184,7 +213,7 @@ export default function ClaimDetails() {
               <Progress value={claim.progress} className="w-full" />
               
               {/* Agent Pipeline Visualization */}
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-8">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
                 {agentPipeline.map((agent, index) => {
                   const isCompleted = completedAgents >= index;
                   const isCurrent = claim.currentAgent === agent.id;
@@ -245,19 +274,66 @@ export default function ClaimDetails() {
                 })}
               </div>
               
-              {claim.status === "approved" && (
-                <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle className="w-6 h-6 text-green-600" />
-                    <div>
-                      <p className="font-medium text-green-800">Claim Approved!</p>
-                      <p className="text-sm text-green-700">
-                        AI processing complete. Estimated payout: ${claim.payoutEstimate?.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
+              {/* Agent Outputs */}
+              {completedAgents >= 0 && (
+                <div className="mt-8 space-y-4">
+                  <h3 className="text-lg font-semibold">Agent Processing Results</h3>
+                  {agentPipeline.slice(0, completedAgents + 1).map((agent, index) => {
+                    const isCompleted = completedAgents > index;
+                    const isCurrent = claim.currentAgent === agent.id;
+                    
+                    if (!isCompleted && !isCurrent) return null;
+                    
+                    return (
+                      <Card key={agent.id} className={`${isCurrent ? 'border-primary' : 'border-green-200'}`}>
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
+                            <div className={`inline-flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0 ${
+                              isCurrent 
+                                ? "bg-primary text-primary-foreground" 
+                                : "bg-green-500 text-white"
+                            }`}>
+                              {isCurrent ? (
+                                <Clock className="w-5 h-5 animate-spin" />
+                              ) : (
+                                <CheckCircle className="w-5 h-5" />
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h4 className="font-semibold">{agent.name}</h4>
+                                {isCurrent && (
+                                  <Badge variant="default" className="text-xs">
+                                    Processing...
+                                  </Badge>
+                                )}
+                                {isCompleted && (
+                                  <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
+                                    Completed
+                                  </Badge>
+                                )}
+                              </div>
+                              {(isCompleted || (isCurrent && Math.random() > 0.5)) && (
+                                <div className="bg-gray-50 rounded-lg p-3 mt-2">
+                                  <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono">
+                                    {agent.output}
+                                  </pre>
+                                </div>
+                              )}
+                              {isCurrent && Math.random() <= 0.5 && (
+                                <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+                                  <Clock className="w-4 h-4 animate-spin" />
+                                  Processing documents and analyzing data...
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
-              )}
+               )}
             </div>
           </CardContent>
         </Card>

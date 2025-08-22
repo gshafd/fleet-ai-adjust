@@ -413,49 +413,158 @@ export default function ClaimDetails() {
   const currentAgentIndex = agentPipeline.findIndex(agent => agent.id === claim.currentAgent);
   const completedAgents = currentAgentIndex >= 0 ? currentAgentIndex : -1;
 
+  const getAgentEditFields = (agentId: string) => {
+    switch (agentId) {
+      case "fnol-intake":
+        return {
+          incidentDate: claim?.incidentDate || '2024-01-15',
+          incidentTime: claim?.incidentTime || '14:30',
+          location: claim?.location || 'Interstate 95, Mile Marker 127, Baltimore, MD',
+          reportNumber: 'PR-2024-089456',
+          officerBadge: '#4721 - Officer Martinez',
+          licenseNumber: 'DL789456123',
+          licenseExpiry: '12/2026',
+          vehicleVin: '1HGBH41JXMN109186',
+          licensePlate: 'FL-ABC123',
+          vehicleMakeModel: '2020 Ford Transit Van',
+          policyNumber: claim?.policyNumber || 'POL-789456',
+          fleetOwner: claim?.fleetOwner || 'ABC Logistics Inc.',
+          driverName: claim?.name || 'John Smith',
+          phone: claim?.phone || '(555) 123-4567',
+          email: claim?.email || 'john@abclogistics.com',
+          lossType: claim?.lossType || 'Auto Collision',
+          vehiclesInvolved: claim?.vehiclesInvolved?.join(', ') || 'AUTO-001',
+          description: claim?.description || 'Rear-end collision during heavy traffic causing front-end damage to vehicle'
+        };
+      case "validation":
+        return {
+          policyStatus: 'ACTIVE',
+          premiumStatus: 'Up to date',
+          coveragePeriod: '01/01/2024 to 12/31/2024',
+          licenseStatus: 'ACTIVE',
+          driverAuthorized: 'Yes',
+          vehicleVin: '1HGBH41JXMN109186',
+          registrationStatus: 'Current and valid',
+          safetyInspection: 'Up to date'
+        };
+      case "fraud-detection":
+        return {
+          duplicateClaims: 'No duplicate claims found',
+          similarClaims: 'No similar claims in past 12 months',
+          locationPattern: 'No pattern at this location',
+          gpsVerified: 'Vehicle confirmed at reported location',
+          timelineConsistent: 'Story is consistent and logical',
+          weatherData: 'Matches police report conditions',
+          claimHistory: '2 claims in 5 years (Normal)',
+          reportingTime: '2 hours after incident (Normal)',
+          riskScore: '15/100 (LOW RISK)',
+          recommendedAction: 'PROCEED WITH STANDARD PROCESSING'
+        };
+      case "claim-creation":
+        return {
+          claimNumber: claim?.id || '',
+          createdDate: claim?.submittedAt.toLocaleDateString() || '',
+          claimType: 'Commercial Vehicle Collision',
+          priorityLevel: 'Standard Processing',
+          assignedAdjuster: claim?.assignedAdjuster || 'Sarah Johnson',
+          adjusterExperience: '8 years commercial claims',
+          currentWorkload: '23 active claims',
+          specialization: 'Fleet vehicle damages',
+          adjusterContact: 'sarah.johnson@insurance.com'
+        };
+      case "coverage-verification":
+        return {
+          policyType: 'Commercial Fleet Insurance - Premium Plan',
+          policyHolder: claim?.fleetOwner || 'ABC Logistics Inc.',
+          coveragePeriod: 'ACTIVE (Jan 1, 2024 - Dec 31, 2024)',
+          annualPremium: '$24,500',
+          collisionCoverage: '$50,000 limit',
+          deductible: '$2,500 per incident',
+          remainingLimit: '$47,500 available',
+          previousClaims: '1 ($3,200 paid)',
+          coverageDecision: 'INCIDENT IS FULLY COVERED'
+        };
+      case "damage-assessment":
+        return {
+          frontBumper: 'Cracked - $1,200',
+          hood: 'Dented - $2,400',
+          leftHeadlight: 'Damaged - $450',
+          grille: 'Broken - $380',
+          frontLeftFender: 'Minor dents - $800',
+          laborCosts: '$8,000 (84 hours @ $95/hour)',
+          partsCosts: '$10,000',
+          totalRepairCost: '$18,000',
+          vehicleValue: '$32,000',
+          totalLossThreshold: '$25,000',
+          repairStatus: 'REPAIRABLE',
+          confidenceLevel: '95%'
+        };
+      case "settlement-payout":
+        return {
+          totalRepairCosts: '$18,000',
+          supplementalEstimates: '$0',
+          grossAmount: '$18,000',
+          policyDeductible: '$2,500',
+          betterment: '$0',
+          previousDamage: '$0',
+          netPayoutAmount: '$15,500',
+          paymentMethod: 'ACH Direct Deposit',
+          taxImplications: 'Not applicable',
+          processingFee: '$0'
+        };
+      case "communication":
+        return {
+          emailSubject: `Claim Settlement Approved - Payment Processing [Claim #${claim?.id}]`,
+          recipientName: claim?.name || 'John Smith',
+          claimNumber: claim?.id || '',
+          incidentDate: claim?.incidentDate || '2024-01-15',
+          vehicle: claim?.vehiclesInvolved?.[0] || 'AUTO-001',
+          settlementAmount: '$15,500',
+          paymentTimeline: '2-3 business days',
+          adjusterNotes: 'Straightforward collision claim with clear liability',
+          followUpScheduled: 'Within 30 days',
+          recommendedStatus: 'Preferred customer status'
+        };
+      default:
+        return {};
+    }
+  };
+
   const handleEditAgent = (agentId: string) => {
     setEditingAgent(agentId);
-    // Initialize edit data based on current claim data
-    setEditData({
-      policyNumber: claim?.policyNumber || '',
-      fleetOwner: claim?.fleetOwner || '',
-      name: claim?.name || '',
-      phone: claim?.phone || '',
-      email: claim?.email || '',
-      incidentDate: claim?.incidentDate || '',
-      incidentTime: claim?.incidentTime || '',
-      location: claim?.location || '',
-      lossType: claim?.lossType || '',
-      description: claim?.description || '',
-      vehiclesInvolved: claim?.vehiclesInvolved?.join(', ') || ''
-    });
+    setEditData(getAgentEditFields(agentId));
   };
 
   const handleSaveAgent = () => {
     if (!claim || !editingAgent) return;
     
-    const updatedClaim = {
-      ...claim,
-      policyNumber: editData.policyNumber,
-      fleetOwner: editData.fleetOwner,
-      name: editData.name,
-      phone: editData.phone,
-      email: editData.email,
-      incidentDate: editData.incidentDate,
-      incidentTime: editData.incidentTime,
-      location: editData.location,
-      lossType: editData.lossType,
-      description: editData.description,
-      vehiclesInvolved: editData.vehiclesInvolved.split(',').map((v: string) => v.trim()).filter(Boolean)
-    };
-
-    updateClaim(claim.id, updatedClaim);
+    // Update core claim data if FNOL agent is being edited
+    if (editingAgent === 'fnol-intake') {
+      const updatedClaim = {
+        ...claim,
+        policyNumber: editData.policyNumber || claim.policyNumber,
+        fleetOwner: editData.fleetOwner || claim.fleetOwner,
+        name: editData.driverName || claim.name,
+        phone: editData.phone || claim.phone,
+        email: editData.email || claim.email,
+        incidentDate: editData.incidentDate || claim.incidentDate,
+        incidentTime: editData.incidentTime || claim.incidentTime,
+        location: editData.location || claim.location,
+        lossType: editData.lossType || claim.lossType,
+        description: editData.description || claim.description,
+        vehiclesInvolved: editData.vehiclesInvolved ? 
+          editData.vehiclesInvolved.split(',').map((v: string) => v.trim()).filter(Boolean) : 
+          claim.vehiclesInvolved
+      };
+      updateClaim(claim.id, updatedClaim);
+    }
+    
     setEditingAgent(null);
     setEditData({});
     
     toast({
       title: "Information Updated",
-      description: "Agent output has been successfully updated."
+      description: `${agentPipeline.find(a => a.id === editingAgent)?.name} output has been successfully updated.`
     });
   };
 
@@ -504,101 +613,53 @@ export default function ClaimDetails() {
 
   const renderEditableAgentOutput = (agentId: string, claim: any) => {
     if (editingAgent === agentId) {
-      // Render editable form for key fields
+      const fields = getAgentEditFields(agentId);
+      const fieldNames = Object.keys(fields);
+      
+      // Render dynamic form based on agent's specific fields
       return (
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Policy Number</label>
-              <Input 
-                value={editData.policyNumber}
-                onChange={(e) => setEditData({...editData, policyNumber: e.target.value})}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Fleet Owner</label>
-              <Input 
-                value={editData.fleetOwner}
-                onChange={(e) => setEditData({...editData, fleetOwner: e.target.value})}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Driver Name</label>
-              <Input 
-                value={editData.name}
-                onChange={(e) => setEditData({...editData, name: e.target.value})}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Phone</label>
-              <Input 
-                value={editData.phone}
-                onChange={(e) => setEditData({...editData, phone: e.target.value})}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Email</label>
-              <Input 
-                value={editData.email}
-                onChange={(e) => setEditData({...editData, email: e.target.value})}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Loss Type</label>
-              <Input 
-                value={editData.lossType}
-                onChange={(e) => setEditData({...editData, lossType: e.target.value})}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Incident Date</label>
-              <Input 
-                type="date"
-                value={editData.incidentDate}
-                onChange={(e) => setEditData({...editData, incidentDate: e.target.value})}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Incident Time</label>
-              <Input 
-                type="time"
-                value={editData.incidentTime}
-                onChange={(e) => setEditData({...editData, incidentTime: e.target.value})}
-                className="mt-1"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground">Location</label>
-            <Input 
-              value={editData.location}
-              onChange={(e) => setEditData({...editData, location: e.target.value})}
-              className="mt-1"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground">Vehicles Involved (comma-separated)</label>
-            <Input 
-              value={editData.vehiclesInvolved}
-              onChange={(e) => setEditData({...editData, vehiclesInvolved: e.target.value})}
-              className="mt-1"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground">Incident Description</label>
-            <Textarea 
-              value={editData.description}
-              onChange={(e) => setEditData({...editData, description: e.target.value})}
-              className="mt-1"
-              rows={3}
-            />
+            {fieldNames.map((fieldName) => {
+              const fieldValue = fields[fieldName];
+              const isTextArea = fieldName.includes('description') || fieldName.includes('notes') || fieldName.includes('reasoning');
+              
+              return (
+                <div key={fieldName} className={isTextArea ? "md:col-span-2" : ""}>
+                  <label className="text-xs font-medium text-muted-foreground">
+                    {fieldName.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                  </label>
+                  {isTextArea ? (
+                    <Textarea 
+                      value={editData[fieldName] || ''}
+                      onChange={(e) => setEditData({...editData, [fieldName]: e.target.value})}
+                      className="mt-1"
+                      rows={3}
+                    />
+                  ) : fieldName.includes('Date') && !fieldName.includes('Time') ? (
+                    <Input 
+                      type="date"
+                      value={editData[fieldName] || ''}
+                      onChange={(e) => setEditData({...editData, [fieldName]: e.target.value})}
+                      className="mt-1"
+                    />
+                  ) : fieldName.includes('Time') ? (
+                    <Input 
+                      type="time"
+                      value={editData[fieldName] || ''}
+                      onChange={(e) => setEditData({...editData, [fieldName]: e.target.value})}
+                      className="mt-1"
+                    />
+                  ) : (
+                    <Input 
+                      value={editData[fieldName] || ''}
+                      onChange={(e) => setEditData({...editData, [fieldName]: e.target.value})}
+                      className="mt-1"
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
           <div className="flex gap-2">
             <Button size="sm" onClick={handleSaveAgent}>

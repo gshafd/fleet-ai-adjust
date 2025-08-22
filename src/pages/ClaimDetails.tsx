@@ -407,8 +407,41 @@ export default function ClaimDetails() {
   const completedAgents = currentAgentIndex >= 0 ? currentAgentIndex : -1;
 
   const handleViewDocument = (docName: string) => {
-    // Simulate document viewing - in real app this would open a modal or new window
-    alert(`Opening ${docName}... (This would open the actual document in a real application)`);
+    // Create a mock document viewer - simulates opening the actual file
+    const newWindow = window.open('', '_blank');
+    if (newWindow) {
+      newWindow.document.write(`
+        <html>
+          <head>
+            <title>${docName}</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+              .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+              .header { border-bottom: 2px solid #ddd; padding-bottom: 10px; margin-bottom: 20px; }
+              .content { line-height: 1.6; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>${docName}</h1>
+                <p style="color: #666;">Document Viewer - Claim ${claim.id}</p>
+              </div>
+              <div class="content">
+                <p><strong>Document Type:</strong> ${docName.includes('report') ? 'Police Report' : docName.includes('photo') || docName.includes('damage') ? 'Vehicle Damage Photos' : docName.includes('license') ? 'Driver License' : 'Insurance Document'}</p>
+                <p><strong>Upload Date:</strong> ${claim.submittedAt.toLocaleDateString()}</p>
+                <p><strong>File Size:</strong> ${docName.includes('zip') ? '8.7 MB' : docName.includes('pdf') ? '2.4 MB' : '1.2 MB'}</p>
+                <p><strong>Status:</strong> ✅ Processed by AI</p>
+                <hr style="margin: 20px 0;">
+                <p style="background: #f8f9fa; padding: 15px; border-left: 4px solid #007bff;">
+                  <strong>Note:</strong> This is a simulated document viewer. In a real application, this would display the actual document content, allow annotations, and provide download options.
+                </p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `);
+    }
   };
 
   return (
@@ -522,74 +555,74 @@ export default function ClaimDetails() {
         </Card>
 
         {/* Compact Uploaded Documents */}
-        <Card className="mb-8">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
+        <Card className="mb-6">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
               <FileText className="w-4 h-4" />
-              Uploaded Documents
+              Documents ({claim.files.length > 0 ? claim.files.length : 3})
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="flex items-center justify-between p-2 rounded border bg-muted/20">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-primary" />
-                  <div>
-                    <p className="text-sm font-medium">Police Report</p>
-                    <p className="text-xs text-muted-foreground">2.4 MB</p>
+          <CardContent className="pt-2">
+            <div className="flex flex-wrap gap-2">
+              {claim.files.length > 0 ? (
+                claim.files.map((file, index) => (
+                  <div key={index} className="flex items-center gap-1 px-2 py-1 text-xs rounded border bg-muted/30">
+                    <FileText className="w-3 h-3 text-primary" />
+                    <span className="font-medium">{file.name}</span>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-4 w-4 p-0 ml-1"
+                      onClick={() => handleViewDocument(file.name)}
+                    >
+                      <Eye className="w-3 h-3" />
+                    </Button>
                   </div>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-7 w-7 p-0"
-                  onClick={() => handleViewDocument("Police Report")}
-                >
-                  <Eye className="w-4 h-4" />
-                </Button>
-              </div>
-              
-              <div className="flex items-center justify-between p-2 rounded border bg-muted/20">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-primary" />
-                  <div>
-                    <p className="text-sm font-medium">Vehicle Photos</p>
-                    <p className="text-xs text-muted-foreground">8.7 MB</p>
+                ))
+              ) : (
+                <>
+                  <div className="flex items-center gap-1 px-2 py-1 text-xs rounded border bg-muted/30">
+                    <FileText className="w-3 h-3 text-primary" />
+                    <span className="font-medium">accident_report_PR089456.pdf</span>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-4 w-4 p-0 ml-1"
+                      onClick={() => handleViewDocument("accident_report_PR089456.pdf")}
+                    >
+                      <Eye className="w-3 h-3" />
+                    </Button>
                   </div>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-7 w-7 p-0"
-                  onClick={() => handleViewDocument("Vehicle Photos")}
-                >
-                  <Eye className="w-4 h-4" />
-                </Button>
-              </div>
-              
-              <div className="flex items-center justify-between p-2 rounded border bg-muted/20">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-primary" />
-                  <div>
-                    <p className="text-sm font-medium">Driver License</p>
-                    <p className="text-xs text-muted-foreground">1.2 MB</p>
+                  <div className="flex items-center gap-1 px-2 py-1 text-xs rounded border bg-muted/30">
+                    <FileText className="w-3 h-3 text-primary" />
+                    <span className="font-medium">vehicle_damage_photos.zip</span>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-4 w-4 p-0 ml-1"
+                      onClick={() => handleViewDocument("vehicle_damage_photos.zip")}
+                    >
+                      <Eye className="w-3 h-3" />
+                    </Button>
                   </div>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-7 w-7 p-0"
-                  onClick={() => handleViewDocument("Driver License")}
-                >
-                  <Eye className="w-4 h-4" />
-                </Button>
-              </div>
+                  <div className="flex items-center gap-1 px-2 py-1 text-xs rounded border bg-muted/30">
+                    <FileText className="w-3 h-3 text-primary" />
+                    <span className="font-medium">driver_license_scan.jpg</span>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-4 w-4 p-0 ml-1"
+                      onClick={() => handleViewDocument("driver_license_scan.jpg")}
+                    >
+                      <Eye className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
-            <div className="mt-3 text-center">
-              <p className="text-xs text-muted-foreground">
-                ✓ All {claim.files.length} documents processed by AI agents
-              </p>
-            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              ✓ All documents processed and analyzed by AI agents
+            </p>
           </CardContent>
         </Card>
 
@@ -600,11 +633,9 @@ export default function ClaimDetails() {
               <CheckCircle className="w-5 h-5 text-green-600" />
               <h2 className="text-xl font-semibold">AI Agent Processing Results</h2>
             </div>
-            {agentPipeline.slice(0, completedAgents + 1).map((agent, index) => {
-              const isCompleted = completedAgents > index;
-              const isCurrent = claim.currentAgent === agent.id;
-              
-              if (!isCompleted && !isCurrent) return null;
+            {agentPipeline.slice(0, Math.max(completedAgents + 1, claim.status === "approved" ? agentPipeline.length : completedAgents + 1)).map((agent, index) => {
+              const isCompleted = completedAgents > index || claim.status === "approved";
+              const isCurrent = claim.currentAgent === agent.id && claim.status !== "approved";
               
               return (
                 <Card key={agent.id} className={`${isCurrent ? 'border-primary' : 'border-green-200'}`}>
@@ -635,13 +666,11 @@ export default function ClaimDetails() {
                             </Badge>
                           )}
                         </div>
-                        {(isCompleted || isCurrent) && (
-                          <div className="bg-gray-50 rounded-lg p-3 mt-2">
-                            <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono">
-                              {getAgentOutput(agent.id, claim)}
-                            </pre>
-                          </div>
-                        )}
+                        <div className="bg-gray-50 rounded-lg p-3 mt-2">
+                          <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono">
+                            {getAgentOutput(agent.id, claim)}
+                          </pre>
+                        </div>
                         {isCurrent && !isCompleted && (
                           <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
                             <Clock className="w-4 h-4 animate-spin" />

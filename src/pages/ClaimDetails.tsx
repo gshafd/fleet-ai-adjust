@@ -1231,10 +1231,12 @@ FILE STATUS: Ready for final review and payment authorization`
                             </Badge>
                           )}
                         </div>
-                        {/* Always show output once agent has been processed */}
-                        <div className="mt-2">
-                          {renderEditableAgentOutput(agent.id, claim)}
-                        </div>
+                        {/* Only show output after agent completes processing */}
+                        {isCompleted && (
+                          <div className="mt-2">
+                            {renderEditableAgentOutput(agent.id, claim)}
+                          </div>
+                        )}
                         {isCurrent && !isCompleted && (
                           <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
                             <Clock className="w-4 h-4 animate-spin" />

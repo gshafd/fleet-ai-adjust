@@ -10,7 +10,7 @@ import { WizardSteps } from "@/components/ui/wizard-steps";
 import { FileUpload } from "@/components/ui/file-upload";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useClaims } from "@/context/ClaimsContext";
-import { ArrowLeft, ArrowRight, MapPin, Calendar, User, FileText, Upload, CheckCircle, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, MapPin, Calendar, User, FileText, Upload, CheckCircle, Sparkles, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const steps = [
@@ -99,6 +99,11 @@ export default function ReportClaim() {
     setTimeout(() => {
       // This will be handled by the ClaimDetails page
     }, 500);
+  };
+
+  const goToDashboard = () => {
+    setShowSubmissionDialog(false);
+    navigate('/dashboard');
   };
 
   const handleDocumentUpload = (files: File[]) => {
@@ -501,12 +506,16 @@ export default function ReportClaim() {
               </div>
             </DialogDescription>
           </DialogHeader>
-          <div className="flex justify-center">
-            <Button onClick={startAIPipeline} className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4" />
-              Watch AI Agents Process Your Claim
-            </Button>
-          </div>
+           <div className="flex flex-col gap-3">
+             <Button onClick={startAIPipeline} className="flex items-center gap-2">
+               <Sparkles className="w-4 h-4" />
+               Watch AI Agents Process Your Claim
+             </Button>
+             <Button variant="outline" onClick={goToDashboard} className="flex items-center gap-2">
+               <Eye className="w-4 h-4" />
+               View Claims Dashboard
+             </Button>
+           </div>
         </DialogContent>
       </Dialog>
     </div>

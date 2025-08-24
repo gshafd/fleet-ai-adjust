@@ -29,6 +29,7 @@ export default function Dashboard() {
     switch (status) {
       case "completed": return "success";
       case "processing": return "status-processing";
+      case "submitted": return "secondary";
       case "fraud-review": return "warning";
       case "error": return "destructive";
       default: return "secondary";
@@ -39,6 +40,7 @@ export default function Dashboard() {
     switch (status) {
       case "completed": return "Completed";
       case "processing": return "Processing";
+      case "submitted": return "Submitted";
       case "fraud-review": return "Fraud Review";
       case "error": return "Error";
       default: return "Pending";
@@ -54,7 +56,7 @@ export default function Dashboard() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold">Claims Management Dashboard</h1>
-            <p className="text-muted-foreground">Autonomous AI-powered claims processing</p>
+            <p className="text-muted-foreground">Autonomous AI-powered claims processing • {claims.length} total claims</p>
           </div>
           <div className="flex gap-4">
             <Card className="p-4">
@@ -117,40 +119,52 @@ export default function Dashboard() {
                       <th className="text-left p-2">Actions</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {claims.map((claim) => (
-                      <tr key={claim.id} className="border-b hover:bg-muted/50">
-                        <td className="p-2 font-medium">{claim.id}</td>
-                        <td className="p-2">{claim.fleetOwner}</td>
-                        <td className="p-2">
-                          <div className="flex gap-1">
-                            {claim.vehiclesInvolved.map((vehicle) => (
-                              <Badge key={vehicle} variant="outline" className="text-xs">
-                                {vehicle}
-                              </Badge>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="p-2">{claim.lossType}</td>
-                        <td className="p-2">
-                          <Badge variant={getStatusColor(claim.status) as any}>
-                            {getStatusLabel(claim.status)}
-                          </Badge>
-                        </td>
-                        <td className="p-2">{claim.assignedAdjuster}</td>
-                        <td className="p-2">${claim.payoutEstimate.toLocaleString()}</td>
-                        <td className="p-2">
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => navigate(`/claim/${claim.id}`)}
-                          >
-                            View
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
+                   <tbody>
+                     {[...claims].sort((a, b) => b.submittedAt.getTime() - a.submittedAt.getTime()).map((claim) => {
+                       const isNewClaim = Date.now() - claim.submittedAt.getTime() < 24 * 60 * 60 * 1000; // 24 hours
+                       return (
+                         <tr key={claim.id} className="border-b hover:bg-muted/50">
+                           <td className="p-2 font-medium">
+                             <div className="flex items-center gap-2">
+                               {claim.id}
+                               {isNewClaim && (
+                                 <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
+                                   NEW
+                                 </Badge>
+                               )}
+                             </div>
+                           </td>
+                           <td className="p-2">{claim.fleetOwner}</td>
+                           <td className="p-2">
+                             <div className="flex gap-1">
+                               {claim.vehiclesInvolved.map((vehicle) => (
+                                 <Badge key={vehicle} variant="outline" className="text-xs">
+                                   {vehicle}
+                                 </Badge>
+                               ))}
+                             </div>
+                           </td>
+                           <td className="p-2">{claim.lossType}</td>
+                           <td className="p-2">
+                             <Badge variant={getStatusColor(claim.status) as any}>
+                               {getStatusLabel(claim.status)}
+                             </Badge>
+                           </td>
+                           <td className="p-2">{claim.assignedAdjuster}</td>
+                           <td className="p-2">${claim.payoutEstimate.toLocaleString()}</td>
+                           <td className="p-2">
+                             <Button 
+                               variant="ghost" 
+                               size="sm"
+                               onClick={() => navigate(`/claim/${claim.id}`)}
+                             >
+                               View
+                             </Button>
+                           </td>
+                         </tr>
+                       );
+                     })}
+                   </tbody>
                 </table>
               </div>
             </CardContent>

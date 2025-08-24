@@ -105,6 +105,19 @@ const analyzeFileContent = (files: File[]) => {
   };
 };
 
+// Helper function to extract real payout amount from agent outputs
+const extractPayoutAmount = (claim: any) => {
+  if (claim.agentOutputs?.['settlement-payout']) {
+    const output = claim.agentOutputs['settlement-payout'];
+    // Extract net payout amount from the agent output
+    const payoutMatch = output.match(/Net Payout[:\s]*\$([0-9,]+)/i);
+    if (payoutMatch) {
+      return parseInt(payoutMatch[1].replace(/,/g, ''));
+    }
+  }
+  return claim.payoutEstimate || 0;
+};
+
 const getAgentOutput = (agentId: string, claim: any, editedData?: any) => {
   // Use edited data if available
   const data = editedData || claim;
@@ -552,7 +565,7 @@ export default function ClaimDetails() {
           status: "approved",
           currentAgent: "completed",
           progress: 100,
-          payoutEstimate: 15500
+          payoutEstimate: extractPayoutAmount(claim) || 15500
         });
         setIsProcessing(false);
         return;
@@ -569,6 +582,11 @@ export default function ClaimDetails() {
 
       // Simulate processing time for each agent
       setTimeout(() => {
+        // Generate and save agent output when processing completes
+        const agentOutput = getAgentOutput(currentAgent.id, claim);
+        saveAgentOutput(claim.id, currentAgent.id, agentOutput);
+        
+        // Move to next agent
         currentAgentIndex++;
         processNextAgent();
       }, 3000 + Math.random() * 2000); // 3-5 seconds per agent

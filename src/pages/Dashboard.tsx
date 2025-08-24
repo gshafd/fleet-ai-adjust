@@ -22,6 +22,7 @@ import {
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("claims");
+  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const navigate = useNavigate();
   const { claims } = useClaims();
 
@@ -135,104 +136,233 @@ export default function Dashboard() {
 
         {/* Claims Overview */}
         {activeTab === "claims" && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Claims Summary</CardTitle>
-              <CardDescription>All claims with comprehensive details and agent processing status</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {[...claims].sort((a, b) => b.submittedAt.getTime() - a.submittedAt.getTime()).map((claim) => {
-                  const isNewClaim = Date.now() - claim.submittedAt.getTime() < 24 * 60 * 60 * 1000;
-                  return (
-                    <Card key={claim.id} className="border-l-4 border-l-primary">
-                      <CardContent className="p-6">
-                        <div className="grid md:grid-cols-3 gap-6">
-                          {/* Main Claim Info */}
-                          <div className="space-y-3">
-                            <div className="flex items-center gap-2">
-                              <h3 className="font-semibold text-lg">{claim.id}</h3>
-                              {isNewClaim && (
-                                <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
-                                  NEW
-                                </Badge>
-                              )}
-                               <Badge variant={getStatusColor(getCurrentStatus(claim)) as any}>
-                                 {getStatusLabel(getCurrentStatus(claim))}
-                               </Badge>
-                            </div>
-                            <div className="space-y-1 text-sm">
-                              <p><strong>Fleet Owner:</strong> {claim.fleetOwner}</p>
-                              <p><strong>Loss Type:</strong> {claim.lossType}</p>
-                              <p><strong>Vehicles:</strong> {claim.vehiclesInvolved.join(', ')}</p>
-                              <p><strong>Damage Assessment:</strong> {extractDamageAmount(claim) > 0 ? `$${extractDamageAmount(claim).toLocaleString()}` : 'Pending'}</p>
-                              <p><strong>Settlement Payout:</strong> {extractPayoutAmount(claim) > 0 ? `$${extractPayoutAmount(claim).toLocaleString()}` : 'Pending'}</p>
-                            </div>
-                          </div>
+          <div className="space-y-6">
+            {/* View Toggle */}
+            <div className="flex justify-between items-center">
+              <div className="flex gap-2">
+                <Button
+                  variant={viewMode === "cards" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("cards")}
+                >
+                  Card View
+                </Button>
+                <Button
+                  variant={viewMode === "table" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("table")}
+                >
+                  Table View
+                </Button>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {claims.length} total claims
+              </div>
+            </div>
 
-                          {/* Adjuster Details */}
-                          <div className="space-y-3">
-                            <h4 className="font-medium text-muted-foreground">ADJUSTER DETAILS</h4>
-                            <div className="space-y-1 text-sm">
-                              <p><strong>Name:</strong> {claim.adjusterDetails?.name || claim.assignedAdjuster}</p>
-                              <p><strong>Email:</strong> {claim.adjusterDetails?.email || 'Not assigned'}</p>
-                              <p><strong>Phone:</strong> {claim.adjusterDetails?.phone || 'Not assigned'}</p>
-                              <p><strong>Location:</strong> {claim.adjusterDetails?.location || 'Not specified'}</p>
-                              <p><strong>Expertise:</strong> {claim.adjusterDetails?.expertise || 'General Claims'}</p>
-                              {claim.adjusterDetails?.assignedAt && (
-                                <p><strong>Assigned:</strong> {claim.adjusterDetails.assignedAt.toLocaleDateString()} at {claim.adjusterDetails.assignedAt.toLocaleTimeString()}</p>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Timeline & Status */}
-                          <div className="space-y-3">
-                            <h4 className="font-medium text-muted-foreground">TIMELINE & STATUS</h4>
-                            <div className="space-y-1 text-sm">
-                              <p><strong>Created:</strong> {claim.submittedAt.toLocaleDateString()} at {claim.submittedAt.toLocaleTimeString()}</p>
-                              <p><strong>Incident Date:</strong> {claim.incidentDate} at {claim.incidentTime}</p>
-                              <p><strong>Current Agent:</strong> {claim.currentAgent}</p>
-                              <p><strong>Progress:</strong> {claim.progress}%</p>
-                              {claim.agentOutputs && Object.keys(claim.agentOutputs).length > 0 && (
-                                <p><strong>Agents Processed:</strong> {Object.keys(claim.agentOutputs).length}</p>
-                              )}
-                              {claim.editedData && Object.keys(claim.editedData).length > 0 && (
-                                <div className="flex items-center gap-1">
-                                  <Badge variant="outline" className="text-xs">
-                                    {Object.keys(claim.editedData).length} Edits Made
+            {/* Card View */}
+            {viewMode === "cards" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Claims Summary</CardTitle>
+                  <CardDescription>All claims with comprehensive details and agent processing status</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {[...claims].sort((a, b) => b.submittedAt.getTime() - a.submittedAt.getTime()).map((claim) => {
+                      const isNewClaim = Date.now() - claim.submittedAt.getTime() < 24 * 60 * 60 * 1000;
+                      return (
+                        <Card key={claim.id} className="border-l-4 border-l-primary">
+                          <CardContent className="p-6">
+                            <div className="grid md:grid-cols-3 gap-6">
+                              {/* Main Claim Info */}
+                              <div className="space-y-3">
+                                <div className="flex items-center gap-2">
+                                  <h3 className="font-semibold text-lg">{claim.id}</h3>
+                                  {isNewClaim && (
+                                    <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
+                                      NEW
+                                    </Badge>
+                                  )}
+                                  <Badge variant={getStatusColor(getCurrentStatus(claim)) as any}>
+                                    {getStatusLabel(getCurrentStatus(claim))}
                                   </Badge>
                                 </div>
-                              )}
+                                <div className="space-y-1 text-sm">
+                                  <p><strong>Fleet Owner:</strong> {claim.fleetOwner}</p>
+                                  <p><strong>Loss Type:</strong> {claim.lossType}</p>
+                                  <p><strong>Vehicles:</strong> {claim.vehiclesInvolved.join(', ')}</p>
+                                  <p><strong>Damage Assessment:</strong> {extractDamageAmount(claim) > 0 ? `$${extractDamageAmount(claim).toLocaleString()}` : 'Pending'}</p>
+                                  <p><strong>Settlement Payout:</strong> {extractPayoutAmount(claim) > 0 ? `$${extractPayoutAmount(claim).toLocaleString()}` : 'Pending'}</p>
+                                </div>
+                              </div>
+
+                              {/* Adjuster Details */}
+                              <div className="space-y-3">
+                                <h4 className="font-medium text-muted-foreground">ADJUSTER DETAILS</h4>
+                                <div className="space-y-1 text-sm">
+                                  <p><strong>Name:</strong> {claim.adjusterDetails?.name || claim.assignedAdjuster}</p>
+                                  <p><strong>Email:</strong> {claim.adjusterDetails?.email || 'Not assigned'}</p>
+                                  <p><strong>Phone:</strong> {claim.adjusterDetails?.phone || 'Not assigned'}</p>
+                                  <p><strong>Location:</strong> {claim.adjusterDetails?.location || 'Not specified'}</p>
+                                  <p><strong>Expertise:</strong> {claim.adjusterDetails?.expertise || 'General Claims'}</p>
+                                  {claim.adjusterDetails?.assignedAt && (
+                                    <p><strong>Assigned:</strong> {claim.adjusterDetails.assignedAt.toLocaleDateString()} at {claim.adjusterDetails.assignedAt.toLocaleTimeString()}</p>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Timeline & Status */}
+                              <div className="space-y-3">
+                                <h4 className="font-medium text-muted-foreground">TIMELINE & STATUS</h4>
+                                <div className="space-y-1 text-sm">
+                                  <p><strong>Created:</strong> {claim.submittedAt.toLocaleDateString()} at {claim.submittedAt.toLocaleTimeString()}</p>
+                                  <p><strong>Incident Date:</strong> {claim.incidentDate} at {claim.incidentTime}</p>
+                                  <p><strong>Current Agent:</strong> {claim.currentAgent}</p>
+                                  <p><strong>Progress:</strong> {claim.progress}%</p>
+                                  {claim.agentOutputs && Object.keys(claim.agentOutputs).length > 0 && (
+                                    <p><strong>Agents Processed:</strong> {Object.keys(claim.agentOutputs).length}</p>
+                                  )}
+                                  {claim.editedData && Object.keys(claim.editedData).length > 0 && (
+                                    <div className="flex items-center gap-1">
+                                      <Badge variant="outline" className="text-xs">
+                                        {Object.keys(claim.editedData).length} Edits Made
+                                      </Badge>
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex gap-2 mt-4">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => navigate(`/claim/${claim.id}`)}
+                                    className="flex items-center gap-1"
+                                  >
+                                    <Eye className="w-3 h-3" />
+                                    View Details
+                                  </Button>
+                                </div>
+                              </div>
                             </div>
-                            <div className="flex gap-2 mt-4">
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => navigate(`/claim/${claim.id}`)}
-                                className="flex items-center gap-1"
-                              >
-                                <Eye className="w-3 h-3" />
-                                View Details
-                              </Button>
+                            
+                            {/* Progress Bar */}
+                            <div className="mt-4 pt-4 border-t">
+                              <div className="flex justify-between text-sm mb-2">
+                                <span>Processing Progress</span>
+                                <span>{claim.progress}%</span>
+                              </div>
+                              <Progress value={claim.progress} className="h-2" />
                             </div>
-                          </div>
-                        </div>
-                        
-                        {/* Progress Bar */}
-                        <div className="mt-4 pt-4 border-t">
-                          <div className="flex justify-between text-sm mb-2">
-                            <span>Processing Progress</span>
-                            <span>{claim.progress}%</span>
-                          </div>
-                          <Progress value={claim.progress} className="h-2" />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Table View */}
+            {viewMode === "table" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Claims Table</CardTitle>
+                  <CardDescription>Tabular view of all claims with key details</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b bg-muted/20">
+                          <th className="text-left p-3 font-medium">Claim ID</th>
+                          <th className="text-left p-3 font-medium">Fleet Owner</th>
+                          <th className="text-left p-3 font-medium">Adjuster</th>
+                          <th className="text-left p-3 font-medium">Created</th>
+                          <th className="text-left p-3 font-medium">Status</th>
+                          <th className="text-left p-3 font-medium">Progress</th>
+                          <th className="text-left p-3 font-medium">Damage</th>
+                          <th className="text-left p-3 font-medium">Payout</th>
+                          <th className="text-left p-3 font-medium">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[...claims].sort((a, b) => b.submittedAt.getTime() - a.submittedAt.getTime()).map((claim) => {
+                          const isNewClaim = Date.now() - claim.submittedAt.getTime() < 24 * 60 * 60 * 1000;
+                          return (
+                            <tr key={claim.id} className="border-b hover:bg-muted/30 transition-colors">
+                              <td className="p-3">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">{claim.id}</span>
+                                  {isNewClaim && (
+                                    <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
+                                      NEW
+                                    </Badge>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="p-3">
+                                <div>
+                                  <p className="font-medium">{claim.fleetOwner}</p>
+                                  <p className="text-xs text-muted-foreground">{claim.lossType}</p>
+                                </div>
+                              </td>
+                              <td className="p-3">
+                                <div>
+                                  <p className="font-medium">{claim.adjusterDetails?.name || claim.assignedAdjuster}</p>
+                                  <p className="text-xs text-muted-foreground">{claim.adjusterDetails?.location || 'Not specified'}</p>
+                                </div>
+                              </td>
+                              <td className="p-3">
+                                <div>
+                                  <p className="font-medium">{claim.submittedAt.toLocaleDateString()}</p>
+                                  <p className="text-xs text-muted-foreground">{claim.submittedAt.toLocaleTimeString()}</p>
+                                </div>
+                              </td>
+                              <td className="p-3">
+                                <Badge variant={getStatusColor(getCurrentStatus(claim)) as any}>
+                                  {getStatusLabel(getCurrentStatus(claim))}
+                                </Badge>
+                              </td>
+                              <td className="p-3">
+                                <div className="w-20">
+                                  <div className="flex justify-between text-xs mb-1">
+                                    <span>{claim.progress}%</span>
+                                  </div>
+                                  <Progress value={claim.progress} className="h-1" />
+                                </div>
+                              </td>
+                              <td className="p-3">
+                                <span className="font-medium">
+                                  {extractDamageAmount(claim) > 0 ? `$${extractDamageAmount(claim).toLocaleString()}` : '-'}
+                                </span>
+                              </td>
+                              <td className="p-3">
+                                <span className="font-medium text-green-600">
+                                  {extractPayoutAmount(claim) > 0 ? `$${extractPayoutAmount(claim).toLocaleString()}` : '-'}
+                                </span>
+                              </td>
+                              <td className="p-3">
+                                <div className="flex gap-1">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => navigate(`/claim/${claim.id}`)}
+                                    className="h-8 px-2"
+                                  >
+                                    <Eye className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         )}
 
         {/* Fleet Management */}

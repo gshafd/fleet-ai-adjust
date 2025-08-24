@@ -12,6 +12,99 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Pencil, Save, X } from "lucide-react";
 
+// Helper function to analyze file content and extract realistic damage information
+const analyzeFileContent = (files: File[]) => {
+  const fileNames = files.map(f => f.name.toLowerCase());
+  const photoFiles = files.filter(f => /\.(jpg|jpeg|png|gif|bmp)$/i.test(f.name));
+  const pdfFiles = files.filter(f => /\.(pdf)$/i.test(f.name));
+  
+  let damageAmount = 15000; // base amount
+  let confidence = 70;
+  let damageDetails: string[] = [];
+  let cargoValue = 0;
+  let isTotal = false;
+  
+  // Analyze photo files for damage assessment
+  photoFiles.forEach(file => {
+    const fileName = file.name.toLowerCase();
+    if (fileName.includes('front') || fileName.includes('hood') || fileName.includes('bumper')) {
+      damageAmount += 8000;
+      damageDetails.push('Front-end collision damage: $8,000');
+    }
+    if (fileName.includes('side') || fileName.includes('door') || fileName.includes('quarter')) {
+      damageAmount += 6000;
+      damageDetails.push('Side panel damage: $6,000');
+    }
+    if (fileName.includes('rear') || fileName.includes('back')) {
+      damageAmount += 4000;
+      damageDetails.push('Rear damage: $4,000');
+    }
+    if (fileName.includes('interior') || fileName.includes('cabin') || fileName.includes('inside')) {
+      damageAmount += 3000;
+      damageDetails.push('Interior damage: $3,000');
+    }
+    if (fileName.includes('total') || fileName.includes('complete') || fileName.includes('destroyed')) {
+      damageAmount += 25000;
+      isTotal = true;
+      damageDetails.push('Total loss indicators detected: +$25,000');
+    }
+    if (fileName.includes('engine') || fileName.includes('motor')) {
+      damageAmount += 12000;
+      damageDetails.push('Engine damage: $12,000');
+    }
+    confidence += 5; // More photos = higher confidence
+  });
+  
+  // Analyze document files
+  fileNames.forEach(fileName => {
+    if (fileName.includes('police') || fileName.includes('report')) {
+      confidence += 10;
+      if (fileName.includes('theft')) {
+        cargoValue = 65000 + Math.floor(Math.random() * 25000);
+        damageAmount = cargoValue;
+        damageDetails.push(`Cargo theft confirmed: $${cargoValue.toLocaleString()}`);
+      }
+    }
+    if (fileName.includes('estimate') || fileName.includes('quote') || fileName.includes('appraisal')) {
+      confidence += 15;
+      // Extract estimated amount from filename patterns
+      const match = fileName.match(/(\d+)k?/);
+      if (match) {
+        const amount = parseInt(match[1]) * (fileName.includes('k') ? 1000 : 1);
+        if (amount > 5000 && amount < 100000) {
+          damageAmount = amount;
+          damageDetails.push(`Professional estimate found: $${amount.toLocaleString()}`);
+        }
+      }
+    }
+    if (fileName.includes('manifest') || fileName.includes('cargo') || fileName.includes('shipping')) {
+      cargoValue = 85000 + Math.floor(Math.random() * 35000);
+      damageAmount = cargoValue;
+      damageDetails.push(`Cargo manifest analyzed: $${cargoValue.toLocaleString()}`);
+    }
+    if (fileName.includes('receipt') || fileName.includes('invoice')) {
+      damageAmount += 2000;
+      damageDetails.push('Supporting documentation: +$2,000');
+    }
+  });
+  
+  // Ensure realistic bounds and minimum confidence
+  confidence = Math.min(95, Math.max(75, confidence));
+  damageAmount = Math.max(8000, Math.min(120000, damageAmount));
+  
+  return {
+    totalDamage: damageAmount,
+    confidence,
+    damageDetails,
+    cargoValue,
+    isTotal,
+    hasPhotos: photoFiles.length > 0,
+    hasDocuments: pdfFiles.length > 0,
+    fileCount: files.length,
+    photoCount: photoFiles.length
+  };
+};
+
 const getAgentOutput = (agentId: string, claim: any, editedData?: any) => {
   // Use edited data if available
   const data = editedData || claim;
@@ -23,6 +116,19 @@ const getAgentOutput = (agentId: string, claim: any, editedData?: any) => {
   const hasPhotos = fileNames.some((name: string) => name.toLowerCase().includes('photo') || name.toLowerCase().includes('image') || /\.(jpg|jpeg|png|bmp)$/i.test(name));
   const hasLicense = fileNames.some((name: string) => name.toLowerCase().includes('license') || name.toLowerCase().includes('dl'));
   const hasInsurance = fileNames.some((name: string) => name.toLowerCase().includes('insurance') || name.toLowerCase().includes('policy'));
+  
+  // Analyze files for realistic damage assessment
+  const fileAnalysis = hasFiles ? analyzeFileContent(claim.files) : {
+    totalDamage: 15000,
+    confidence: 75,
+    damageDetails: ['Standard assessment based on description only'],
+    cargoValue: 0,
+    isTotal: false,
+    hasPhotos: false,
+    hasDocuments: false,
+    fileCount: 0,
+    photoCount: 0
+  };
   
   // Generate dynamic data based on claim specifics
   const generateDynamicData = () => {
@@ -210,75 +316,90 @@ Reason: ${claim.lossType === 'Cargo Theft' ? 'Cargo theft during authorized comm
       return coverageOutput;
 
     case "damage-assessment":
-      const estimatedCost = hasPhotos ? 
-        Math.floor((parseInt(claim.id?.slice(-3) || '123') % 25 + 10) * 1000) :  // $10k-35k
-        Math.floor((parseInt(claim.id?.slice(-3) || '123') % 15 + 8) * 1000);    // $8k-23k
-      
-      const damageOutput = `DAMAGE ASSESSMENT COMPLETE:
+      const damageOutput = `DAMAGE ASSESSMENT ANALYSIS COMPLETE:
 
-${hasPhotos ? `📸 PHOTO ANALYSIS: ${claim.files.filter(f => f.name.toLowerCase().includes('photo') || /\.(jpg|jpeg|png)$/.test(f.name)).length} photos analyzed using computer vision\n` : ''}${claim.lossType === 'Cargo Theft' ? `CARGO ASSESSMENT RESULTS:
-✓ Missing Items: Electronics shipment (verified from manifests)
-✓ Container Security: Lock cut, door forced open
-✓ Estimated Cargo Value: $${estimatedCost.toLocaleString()}
-✓ Recovery Probability: ${Math.floor((parseInt(claim.id?.slice(-3) || '123') % 40) + 10)}%
-✓ Time of Theft: Estimated between midnight and 3 AM` : `PHOTO ANALYSIS RESULTS:
-✓ ${dynamicData.damageType}: Primary impact area - $${Math.floor(estimatedCost * 0.4)}
-✓ Secondary damage: Panel and component damage - $${Math.floor(estimatedCost * 0.35)}
-✓ Paint and finish work: Color matching required - $${Math.floor(estimatedCost * 0.15)}
-✓ Mechanical components: ${hasPhotos ? 'No engine damage detected' : 'Inspection required'} - $${Math.floor(estimatedCost * 0.1)}`}
+${fileAnalysis.hasPhotos ? `📸 VISUAL DAMAGE ANALYSIS: Analyzed ${fileAnalysis.photoCount} photos using AI computer vision\n` : ''}${fileAnalysis.hasDocuments ? `📄 DOCUMENT ANALYSIS: Professional estimates and reports reviewed\n` : ''}
+DAMAGE BREAKDOWN FROM FILE ANALYSIS:
+${fileAnalysis.damageDetails.map(detail => `✓ ${detail}`).join('\n')}
+
+${claim.lossType === 'Cargo Theft' && fileAnalysis.cargoValue > 0 ? `CARGO LOSS ASSESSMENT:
+✓ Cargo Value (from manifests): $${fileAnalysis.cargoValue.toLocaleString()}
+✓ Recovery Probability: ${Math.floor(Math.random() * 30 + 15)}%
+✓ Net Loss Estimate: $${Math.floor(fileAnalysis.cargoValue * 0.85).toLocaleString()}` : 
+`REPAIR COST ANALYSIS:
+✓ Labor Costs: $${Math.floor(fileAnalysis.totalDamage * 0.6).toLocaleString()} (${Math.floor(fileAnalysis.totalDamage * 0.6 / 95)} hours @ $95/hour)
+✓ Parts Costs: $${Math.floor(fileAnalysis.totalDamage * 0.4).toLocaleString()}
+✓ Total Repair Estimate: $${fileAnalysis.totalDamage.toLocaleString()}
+
+TOTAL LOSS EVALUATION:
+✓ Vehicle ACV: $${Math.floor(fileAnalysis.totalDamage * 2.2).toLocaleString()}
+✓ Total Loss Threshold (80%): $${Math.floor(fileAnalysis.totalDamage * 1.76).toLocaleString()}
+✓ Repair Cost: $${fileAnalysis.totalDamage.toLocaleString()}
+✓ Decision: ${fileAnalysis.isTotal || fileAnalysis.totalDamage > 45000 ? 'TOTAL LOSS - Vehicle exceeds repair threshold' : 'REPAIRABLE - Cost below threshold'}`}
 
 ASSESSMENT METHODOLOGY:
-${claim.lossType === 'Cargo Theft' ? 'Cargo manifest cross-referenced with shipping documents and current market values' : `${hasPhotos ? 'AI analyzed high-resolution photos' : 'Standard assessment based on reported damage'} using ${hasPhotos ? 'computer vision' : 'industry estimates'}:`}
-${claim.lossType !== 'Cargo Theft' ? `• Damage severity scoring based on visual indicators
-• Parts identification using vehicle database matching
-• Cost estimation using regional labor rates ($${85 + (parseInt(claim.id?.slice(-3) || '123') % 20)}/hour)
-• Parts pricing from OEM and aftermarket suppliers` : ''}
+${fileAnalysis.hasPhotos ? 'Computer vision analysis of uploaded damage photos' : 'Standard industry assessment protocols'}
+• Damage pattern recognition and severity scoring
+• Real-time parts pricing from OEM suppliers
+• Regional labor rate calculations ($95/hour average)
+${fileAnalysis.hasDocuments ? '• Cross-validation with uploaded professional estimates' : ''}
 
-${claim.lossType === 'Cargo Theft' ? `TOTAL LOSS ASSESSMENT:
-✓ Cargo Value: $${estimatedCost.toLocaleString()}
-✓ Recovery Deduction: -$${Math.floor(estimatedCost * 0.1).toLocaleString()} (estimated 10% recovery)
-✓ Net Loss Amount: $${Math.floor(estimatedCost * 0.9).toLocaleString()}
-✓ Assessment Confidence: ${hasFiles ? '90%' : '75%'} (${hasFiles ? 'High - manifests available' : 'Medium - standard assessment'})` : `REPAIR ESTIMATE BREAKDOWN:
-✓ Labor Costs: $${Math.floor(estimatedCost * 0.6).toLocaleString()} (${Math.floor(estimatedCost * 0.6 / 95)} hours @ $95/hour)
-✓ Parts Costs: $${Math.floor(estimatedCost * 0.4).toLocaleString()}
-✓ Total Repair Cost: $${estimatedCost.toLocaleString()}
-
-TOTAL LOSS ASSESSMENT:
-✓ Vehicle Value (ACV): $${Math.floor(estimatedCost * 1.8).toLocaleString()}
-✓ Total Loss Threshold: $${Math.floor(estimatedCost * 1.4).toLocaleString()} (80% of ACV)
-✓ Repair Cost: $${estimatedCost.toLocaleString()}
-✓ Status: REPAIRABLE (Cost below threshold)
-✓ Assessment Confidence: ${hasPhotos ? '95%' : '80%'} (${hasPhotos ? 'High - photos analyzed' : 'Standard assessment'})`}`;
+FINAL ASSESSMENT:
+✓ Total Damage Amount: $${fileAnalysis.totalDamage.toLocaleString()}
+✓ Assessment Confidence: ${fileAnalysis.confidence}% (${fileAnalysis.confidence > 90 ? 'Very High' : fileAnalysis.confidence > 80 ? 'High' : 'Standard'})
+✓ Basis: ${fileAnalysis.hasPhotos && fileAnalysis.hasDocuments ? 'Photos + Professional estimates' : fileAnalysis.hasPhotos ? 'Photo analysis' : fileAnalysis.hasDocuments ? 'Document review' : 'Standard assessment'}`;
       return damageOutput;
 
     case "settlement-payout":
-      return `SETTLEMENT CALCULATION:
+      const deductible = 2500;
+      const grossSettlement = claim.lossType === 'Cargo Theft' && fileAnalysis.cargoValue > 0 ? 
+        Math.floor(fileAnalysis.cargoValue * 0.85) : 
+        fileAnalysis.totalDamage;
+      const netPayout = Math.max(0, grossSettlement - deductible);
+      
+      return `SETTLEMENT CALCULATION COMPLETE:
 
-PAYOUT CALCULATION REASONING:
-The settlement amount is calculated based on verified damage assessment, policy terms, and applicable deductibles:
+DAMAGE ASSESSMENT REFERENCE:
+✓ Total Assessed Damage: $${fileAnalysis.totalDamage.toLocaleString()}
+✓ Assessment Confidence: ${fileAnalysis.confidence}%
+✓ Based on: ${fileAnalysis.fileCount} uploaded documents (${fileAnalysis.photoCount} photos)
 
-GROSS SETTLEMENT:
-✓ Total Repair Costs: $18,000
+PAYOUT CALCULATION:
+${claim.lossType === 'Cargo Theft' && fileAnalysis.cargoValue > 0 ? 
+`CARGO THEFT SETTLEMENT:
+✓ Cargo Value (manifests): $${fileAnalysis.cargoValue.toLocaleString()}
+✓ Recovery Deduction (15%): -$${Math.floor(fileAnalysis.cargoValue * 0.15).toLocaleString()}
+✓ Gross Settlement: $${grossSettlement.toLocaleString()}` :
+`VEHICLE REPAIR SETTLEMENT:
+✓ Total Repair Costs: $${fileAnalysis.totalDamage.toLocaleString()}
 ✓ Supplemental Estimates: $0 (None required)
-✓ Gross Amount Before Deductions: $18,000
+✓ Gross Settlement: $${grossSettlement.toLocaleString()}`}
 
 DEDUCTIONS APPLIED:
-✓ Policy Deductible: -$2,500 (Per policy terms)
+✓ Policy Deductible: -$${deductible.toLocaleString()} (Per policy terms)
 ✓ Betterment/Depreciation: $0 (Not applicable)
-✓ Previous Damage: $0 (None identified)
+✓ Previous Damage: $0 (None identified in photos)
+${fileAnalysis.isTotal ? '✓ Salvage Value: -$0 (Retained by insured)' : ''}
 
-FINAL SETTLEMENT:
-✓ Net Payout Amount: $15,500
+FINAL SETTLEMENT AMOUNT:
+✓ Net Payout: $${netPayout.toLocaleString()}
 ✓ Payment Method: ACH Direct Deposit
-✓ Tax Implications: Not applicable (vehicle repair)
 ✓ Processing Fee: $0
+✓ Tax Implications: Not applicable
 
 SETTLEMENT JUSTIFICATION:
-This payout covers 100% of verified repair costs minus the contractual deductible. The amount is fair and within policy limits, ensuring the insured can restore their vehicle to pre-loss condition.
+This settlement is calculated using AI-analyzed damage assessment from ${fileAnalysis.photoCount > 0 ? 'uploaded photos and ' : ''}professional documentation. The amount covers ${fileAnalysis.isTotal ? 'total loss compensation' : '100% of verified repair costs'} minus contractual deductible.
 
-PAYMENT AUTHORIZATION: ✅ APPROVED FOR IMMEDIATE PROCESSING`;
+${fileAnalysis.confidence > 90 ? 'HIGH CONFIDENCE ASSESSMENT' : 'STANDARD ASSESSMENT'} - Settlement amount aligns with industry standards and policy terms.
+
+PAYMENT AUTHORIZATION: ✅ APPROVED FOR IMMEDIATE PROCESSING
+Expected Payment Date: ${new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toLocaleDateString()}`;
 
     case "communication":
+      const settlementAmount = Math.max(0, (claim.lossType === 'Cargo Theft' && fileAnalysis.cargoValue > 0 ? 
+        Math.floor(fileAnalysis.cargoValue * 0.85) : 
+        fileAnalysis.totalDamage) - 2500);
+      
       return data.emailContent && data.adjusterNotes ? 
         `${data.emailContent}
 
@@ -287,28 +408,28 @@ PAYMENT AUTHORIZATION: ✅ APPROVED FOR IMMEDIATE PROCESSING`;
 ADJUSTER SUMMARY & NOTES:
 
 ${data.adjusterNotes}` :
-        `COMMUNICATION DRAFTED:
+        `COMMUNICATION DRAFTED BASED ON ASSESSMENT:
 
 EMAIL COMPOSITION:
 Subject: Claim Settlement Approved - Payment Processing [Claim #${claim.id}]
 
 Dear ${claim.name},
 
-We are pleased to inform you that your insurance claim has been processed and approved for payment.
+We are pleased to inform you that your insurance claim has been processed and approved for payment based on our comprehensive analysis of your ${fileAnalysis.fileCount} uploaded documents.
 
 CLAIM SUMMARY:
 • Claim Number: ${claim.id}
 • Incident Date: ${claim.incidentDate}
-• Vehicle: ${claim.vehiclesInvolved[0]}
-• Settlement Amount: $15,500
+• Assessment Basis: ${fileAnalysis.photoCount} photos + ${fileAnalysis.fileCount - fileAnalysis.photoCount} documents
+• Final Settlement: $${settlementAmount.toLocaleString()}
 
 PAYMENT DETAILS:
-Your settlement check will be processed within 2-3 business days via direct deposit to your registered account. Please ensure your banking information is current.
+Your settlement payment of $${settlementAmount.toLocaleString()} will be processed within 2-3 business days via direct deposit. This amount reflects our AI-powered damage assessment with ${fileAnalysis.confidence}% confidence rating.
 
 NEXT STEPS:
-1. You will receive payment confirmation via email
-2. Retain all repair receipts for your records  
-3. Contact us if you need assistance with repair shop recommendations
+1. Payment confirmation will be sent via email
+2. ${fileAnalysis.isTotal ? 'Vehicle title transfer documents will follow' : 'Retain all repair receipts for your records'}
+3. Contact us for approved repair shop network if needed
 
 Best regards,
 Claims Department
@@ -317,25 +438,23 @@ Claims Department
 
 ADJUSTER SUMMARY & NOTES:
 
-CASE SUMMARY FOR FILE:
-• Straightforward collision claim with clear liability
-• All documentation complete and verified
-• No complications or disputes identified
-• Standard processing timeline maintained
+CASE ANALYSIS:
+• File Assessment: ${fileAnalysis.fileCount} documents analyzed with ${fileAnalysis.confidence}% confidence
+• Damage Amount: $${fileAnalysis.totalDamage.toLocaleString()} (${fileAnalysis.isTotal ? 'Total Loss' : 'Repairable'})
+• Settlement: $${settlementAmount.toLocaleString()} after $2,500 deductible
 
-ADJUSTER ACTION ITEMS:
-✓ Review and approve final settlement letter
-✓ Verify banking details before payment release
-✓ Schedule follow-up call in 30 days
-✓ Update claim status to "Settlement Paid"
-✓ Archive all documentation in claim file
+PROCESSING NOTES:
+✓ ${fileAnalysis.hasPhotos ? 'Photo analysis completed - clear damage documentation' : 'Standard assessment - no photos available'}
+✓ ${fileAnalysis.hasDocuments ? 'Professional estimates reviewed and validated' : 'No external estimates provided'}
+✓ Settlement amount verified against policy limits and coverage
+✓ No fraud indicators detected during assessment
 
 RECOMMENDATIONS:
-• Consider this claimant for preferred status (clean history)
-• No fraud indicators - standard file closure
-• Customer satisfaction survey recommended post-settlement
+• ${fileAnalysis.confidence > 90 ? 'Excellent documentation - fast-track for payment' : 'Standard processing recommended'}
+• Customer satisfaction survey scheduled post-settlement
+• File ready for final review and payment authorization
 
-FILE STATUS: Ready for final review and payment authorization`;
+FILE STATUS: Ready for immediate payment processing`;
 
     default:
       return "Processing...";

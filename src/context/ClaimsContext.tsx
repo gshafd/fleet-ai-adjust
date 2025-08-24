@@ -20,6 +20,17 @@ export interface Claim {
   location: string;
   description: string;
   files: File[];
+  // Agent outputs and edits
+  agentOutputs?: Record<string, string>;
+  editedData?: Record<string, any>;
+  adjusterDetails?: {
+    name: string;
+    email: string;
+    phone: string;
+    location: string;
+    expertise: string;
+    assignedAt: Date;
+  };
 }
 
 interface ClaimsContextType {
@@ -54,6 +65,14 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       location: "Interstate 95, Mile Marker 127, Baltimore, MD",
       description: "Rear-end collision during heavy traffic",
       files: [],
+      adjusterDetails: {
+        name: "Sarah Johnson",
+        email: "sarah.johnson@autosure.com",
+        phone: "(555) 234-5671",
+        location: "Chicago, IL",
+        expertise: "Collision Claims",
+        assignedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      },
     },
     {
       id: "CL-2024-001235",
@@ -75,6 +94,14 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       location: "Warehouse District, Houston, TX",
       description: "Cargo theft from locked trailer overnight",
       files: [],
+      adjusterDetails: {
+        name: "Mike Chen",
+        email: "mike.chen@autosure.com",
+        phone: "(555) 345-6782",
+        location: "Denver, CO",
+        expertise: "Cargo & Theft Claims",
+        assignedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+      },
     },
   ]);
 

@@ -78,6 +78,16 @@ export default function ReportClaim() {
       payoutEstimate: 0,
       currentAgent: "document-review",
       progress: 5,
+      adjusterDetails: {
+        name: "AI Agent",
+        email: "ai.agent@autosure.com",
+        phone: "(555) 000-0000",
+        location: "Virtual Processing Center",
+        expertise: "Automated Claims Processing",
+        assignedAt: new Date(),
+      },
+      agentOutputs: {},
+      editedData: {},
     });
 
     setSubmittedClaimId(claimId);

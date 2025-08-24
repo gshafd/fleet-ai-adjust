@@ -65,7 +65,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       name: "John Smith",
       phone: "(555) 123-4567",
       email: "john@abclogistics.com",
-      incidentDate: "2024-01-15",
+      incidentDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000 - 2 * 60 * 60 * 1000).toISOString().split('T')[0], // 2 days ago + 2 hours earlier than reported
       incidentTime: "14:30",
       location: "Interstate 95, Mile Marker 127, Baltimore, MD",
       description: "Rear-end collision during heavy traffic causing front-end damage to vehicle",
@@ -99,7 +99,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       name: "Jane Doe",
       phone: "(555) 987-6543",
       email: "jane@xyztransport.com",
-      incidentDate: "2024-01-10",
+      incidentDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000 - 4 * 60 * 60 * 1000).toISOString().split('T')[0], // 5 days ago + 4 hours earlier than reported
       incidentTime: "03:15",
       location: "Warehouse District, Houston, TX",
       description: "Cargo theft from locked trailer overnight - electronics shipment stolen",
@@ -133,7 +133,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       name: "Robert Chen",
       phone: "(555) 456-7890",
       email: "robert@metrodelivery.com",
-      incidentDate: "2024-01-12",
+      incidentDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000 - 6 * 60 * 60 * 1000).toISOString().split('T')[0], // 3 days ago + 6 hours earlier than reported
       incidentTime: "22:00",
       location: "Downtown Parking Garage, Miami, FL",
       description: "Commercial van stolen from secured parking facility",
@@ -164,7 +164,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       name: "Maria Garcia",
       phone: "(555) 234-5678",
       email: "maria@swiftcargo.com",
-      incidentDate: "2024-01-18",
+      incidentDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000 - 3 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 day ago + 3 hours earlier than reported
       incidentTime: "16:45",
       location: "Highway 10 West, Phoenix, AZ",
       description: "Multi-vehicle accident involving truck and trailer in heavy rain conditions",
@@ -195,7 +195,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       name: "Alex Thompson",
       phone: "(555) 789-0123",
       email: "alex@urbanexpress.com",
-      incidentDate: "2024-01-19",
+      incidentDate: new Date(Date.now() - 6 * 60 * 60 * 1000 - 1 * 60 * 60 * 1000).toISOString().split('T')[0], // 6 hours ago + 1 hour earlier than reported
       incidentTime: "11:20",
       location: "Broadway & 42nd Street, New York, NY",
       description: "Delivery van collided with building entrance causing structural damage",
@@ -226,7 +226,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       name: "Jennifer Lee",
       phone: "(555) 345-6789",
       email: "jennifer@coastaltransport.com",
-      incidentDate: "2024-01-08",
+      incidentDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000 - 3 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 days ago + 3 hours earlier than reported
       incidentTime: "19:30",
       location: "Interstate 4, Orlando, FL",
       description: "Hail damage to truck cab and cargo area during severe thunderstorm",
@@ -261,7 +261,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       name: "Michael Brown",
       phone: "(555) 678-9012",
       email: "michael@primelogistics.com",
-      incidentDate: "2024-01-14",
+      incidentDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000 - 2 * 60 * 60 * 1000).toISOString().split('T')[0], // 4 days ago + 2 hours earlier than reported
       incidentTime: "08:15",
       location: "Rest Area Mile 245, I-75 North, Georgia",
       description: "Engine fire spread to cargo area causing total loss of vehicle and partial cargo damage",
@@ -295,7 +295,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       name: "Sarah Wilson",
       phone: "(555) 890-1234",
       email: "sarah@reliablefreight.com",
-      incidentDate: "2024-01-19",
+      incidentDate: new Date(Date.now() - 3 * 60 * 60 * 1000 - 30 * 60 * 1000).toISOString().split('T')[0], // 3 hours ago + 30 minutes earlier than reported
       incidentTime: "02:45",
       location: "Industrial District, Detroit, MI",
       description: "Commercial van windows broken and tires slashed during overnight parking",
@@ -326,7 +326,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       name: "Kevin Davis",
       phone: "(555) 012-3456",
       email: "kevin@expressroute.com",
-      incidentDate: "2024-01-06",
+      incidentDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000 - 5 * 60 * 60 * 1000).toISOString().split('T')[0], // 8 days ago + 5 hours earlier than reported
       incidentTime: "13:40",
       location: "Highway 101, San Francisco, CA",
       description: "Engine failure during delivery route causing roadside breakdown and towing",
@@ -357,7 +357,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       name: "Patricia Martinez",
       phone: "(555) 123-7890",
       email: "patricia@northeastshipping.com",
-      incidentDate: "2024-01-09",
+      incidentDate: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000 - 4 * 60 * 60 * 1000).toISOString().split('T')[0], // 6 days ago + 4 hours earlier than reported
       incidentTime: "05:30",
       location: "I-95 North, Exit 47, Massachusetts",
       description: "Truck jackknifed on icy road conditions causing guardrail damage and cargo spill",

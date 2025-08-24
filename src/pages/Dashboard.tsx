@@ -56,9 +56,45 @@ export default function Dashboard() {
   // Helper function to get current processing status from agent outputs
   const getCurrentStatus = (claim: any) => {
     const agentCount = claim.agentOutputs ? Object.keys(claim.agentOutputs).length : 0;
-    if (agentCount >= 8) return 'completed';
-    if (agentCount >= 3) return 'processing';
-    return claim.status || 'submitted';
+    if (claim.status === "approved" || claim.progress === 100 || agentCount >= 8) return 'completed';
+    if (claim.status === "fraud-review") return 'fraud-review';
+    if (claim.status === "error") return 'error';
+    if (agentCount >= 3 || claim.progress > 50) return 'processing';
+    return 'submitted';
+  };
+
+  // Helper function to get fleet owner from claim data or agent outputs
+  const getFleetOwner = (claim: any) => {
+    // Try to get from agent outputs first (more accurate)
+    if (claim.agentOutputs?.['fnol-intake']) {
+      const output = claim.agentOutputs['fnol-intake'];
+      const fleetMatch = output.match(/Fleet Owner[:\s]*([^\n]+)/i);
+      if (fleetMatch) {
+        return fleetMatch[1].trim();
+      }
+    }
+    return claim.fleetOwner || 'Processing...';
+  };
+
+  // Helper function to get incident description from claim or agent outputs
+  const getIncidentDescription = (claim: any) => {
+    if (claim.agentOutputs?.['fnol-intake']) {
+      const output = claim.agentOutputs['fnol-intake'];
+      const descMatch = output.match(/Incident Description[:\s]*([^\n]+)/i);
+      if (descMatch) {
+        return descMatch[1].trim();
+      }
+    }
+    return claim.description || claim.lossType || 'Processing incident details...';
+  };
+
+  // Helper function to get adjuster from claim data
+  const getAdjusterInfo = (claim: any) => {
+    const adjuster = claim.adjusterDetails || {};
+    return {
+      name: adjuster.name || claim.assignedAdjuster || 'Assigning...',
+      location: adjuster.location || 'Remote'
+    };
   };
 
   const getStatusColor = (status: string) => {
@@ -173,14 +209,14 @@ export default function Dashboard() {
                           </td>
                           <td className="p-3">
                             <div>
-                              <p className="font-medium">{claim.fleetOwner}</p>
-                              <p className="text-xs text-muted-foreground">{claim.lossType}</p>
+                              <p className="font-medium">{getFleetOwner(claim)}</p>
+                              <p className="text-xs text-muted-foreground">{getIncidentDescription(claim)}</p>
                             </div>
                           </td>
                           <td className="p-3">
                             <div>
-                              <p className="font-medium">{claim.adjusterDetails?.name || claim.assignedAdjuster}</p>
-                              <p className="text-xs text-muted-foreground">{claim.adjusterDetails?.location || 'Remote'}</p>
+                              <p className="font-medium">{getAdjusterInfo(claim).name}</p>
+                              <p className="text-xs text-muted-foreground">{getAdjusterInfo(claim).location}</p>
                             </div>
                           </td>
                           <td className="p-3">

@@ -48,6 +48,40 @@ export default function ReportClaim() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  // Helper function to determine loss type based on description and files
+  const determineLossType = (description: string, files: File[]) => {
+    const desc = description.toLowerCase();
+    const fileNames = files.map(f => f.name.toLowerCase()).join(' ');
+    
+    if (desc.includes('theft') || desc.includes('stolen') || desc.includes('cargo') || fileNames.includes('theft')) {
+      return 'Cargo Theft';
+    }
+    if (desc.includes('fire') || desc.includes('burned') || fileNames.includes('fire')) {
+      return 'Fire Damage';
+    }
+    if (desc.includes('weather') || desc.includes('hail') || desc.includes('storm') || desc.includes('flood')) {
+      return 'Weather Damage';
+    }
+    if (desc.includes('vandal') || desc.includes('broken') || desc.includes('smashed')) {
+      return 'Vandalism';
+    }
+    if (desc.includes('multiple') || desc.includes('several') || desc.includes('many vehicles')) {
+      return 'Multi-Vehicle Collision';
+    }
+    if (desc.includes('property') || desc.includes('building') || desc.includes('structure')) {
+      return 'Property Damage';
+    }
+    if (desc.includes('mechanical') || desc.includes('engine') || desc.includes('breakdown')) {
+      return 'Mechanical Failure';
+    }
+    if (desc.includes('jackknife') || desc.includes('jack-knife')) {
+      return 'Jackknife Accident';
+    }
+    
+    // Default to collision for most cases
+    return 'Collision';
+  };
+
   const nextStep = () => {
     const stepIndex = steps.findIndex(s => s.id === currentStep);
     if (stepIndex < steps.length - 1) {
@@ -109,12 +143,12 @@ export default function ReportClaim() {
       selectedAdjuster = humanAdjusters[3]; // David Kim for fleet
     }
     
-    // Create new claim with human adjuster assignment
+    // Create new claim with human adjuster assignment and realistic data
     const claimId = addClaim({
       ...formData,
-      fleetOwner: formData.name || "Unknown Fleet",
-      vehiclesInvolved: ["AUTO-001"], // Default for now
-      lossType: "Auto Collision", // Default for now  
+      fleetOwner: formData.name || "Private Commercial Owner",
+      vehiclesInvolved: ["TRK-" + String(Math.floor(Math.random() * 900) + 100)], // Generate realistic vehicle ID
+      lossType: determineLossType(formData.description, formData.files),
       status: "submitted",
       assignedAdjuster: selectedAdjuster.name,
       payoutEstimate: 0,

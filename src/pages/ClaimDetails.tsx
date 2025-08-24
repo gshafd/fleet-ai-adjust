@@ -16,168 +16,240 @@ const getAgentOutput = (agentId: string, claim: any, editedData?: any) => {
   // Use edited data if available
   const data = editedData || claim;
   
+  // Analyze uploaded files to customize outputs
+  const hasFiles = claim.files && claim.files.length > 0;
+  const fileNames = hasFiles ? claim.files.map((f: File) => f.name) : [];
+  const hasPoliceReport = fileNames.some((name: string) => name.toLowerCase().includes('police') || name.toLowerCase().includes('report'));
+  const hasPhotos = fileNames.some((name: string) => name.toLowerCase().includes('photo') || name.toLowerCase().includes('image') || /\.(jpg|jpeg|png|bmp)$/i.test(name));
+  const hasLicense = fileNames.some((name: string) => name.toLowerCase().includes('license') || name.toLowerCase().includes('dl'));
+  const hasInsurance = fileNames.some((name: string) => name.toLowerCase().includes('insurance') || name.toLowerCase().includes('policy'));
+  
+  // Generate dynamic data based on claim specifics
+  const generateDynamicData = () => {
+    const locations = [
+      'Interstate 95, Mile Marker 127, Baltimore, MD',
+      'Highway 101, Exit 42, San Francisco, CA',
+      'I-75 North, Detroit, MI',
+      'Route 66, Flagstaff, AZ',
+      'Broadway & 5th Street, New York, NY'
+    ];
+    
+    const weatherConditions = ['Clear, dry roads', 'Light rain, wet pavement', 'Foggy conditions', 'Snow, icy roads', 'Heavy rain, poor visibility'];
+    const damageTypes = ['Front-end collision damage', 'Side impact damage', 'Rear-end damage', 'Multiple impact points', 'Rollover damage'];
+    const vehicleTypes = ['2020 Ford Transit Van', '2019 Chevrolet Silverado', '2021 Ram ProMaster', '2018 Mercedes Sprinter', '2022 Ford F-150'];
+    
+    // Use claim ID as seed for consistent "randomization"
+    const seed = claim.id ? parseInt(claim.id.slice(-3)) : 123;
+    
+    return {
+      location: claim.location || locations[seed % locations.length],
+      weather: weatherConditions[seed % weatherConditions.length],
+      damageType: damageTypes[seed % damageTypes.length],
+      vehicleType: vehicleTypes[seed % vehicleTypes.length],
+      reportNumber: `PR-2024-${String(seed).padStart(6, '0')}`,
+      officerBadge: `#${4000 + (seed % 999)} - Officer ${['Martinez', 'Johnson', 'Williams', 'Brown', 'Davis'][seed % 5]}`,
+      licenseNumber: `DL${seed}${String(seed * 123).slice(-6)}`,
+      vin: `1HGBH41JXMN${String(seed * 1000).slice(-6)}`,
+      licensePlate: `${['FL', 'CA', 'TX', 'NY', 'MI'][seed % 5]}-${String(seed).toUpperCase()}${String(seed * 2).slice(-2)}`,
+    };
+  };
+  
+  const dynamicData = generateDynamicData();
+  
   switch (agentId) {
     case "fnol-intake":
-      return `EXTRACTED CLAIM INFORMATION FROM UPLOADED DOCUMENTS:
-
-📄 POLICE REPORT ANALYSIS:
-✓ Incident Date: ${claim.incidentDate || '2024-01-15'} at ${claim.incidentTime || '14:30'}
-✓ Location: ${claim.location || 'Interstate 95, Mile Marker 127, Baltimore, MD'}
-✓ Weather Conditions: Clear, dry roads
-✓ Officer Badge: #4721 - Officer Martinez
-✓ Report Number: PR-2024-089456
-
-📄 DRIVER LICENSE SCAN:
-✓ License Number: DL789456123
-✓ Expiry Date: 12/2026 (Valid)
-✓ CDL Status: Commercial Driver License Active
-✓ Restrictions: None
-✓ Previous Violations: Clean record
-
-📄 VEHICLE PHOTOS ANALYSIS:
-✓ Damage Location: Front bumper, hood, left headlight
-✓ Damage Severity: Moderate impact damage
-✓ VIN Extracted: 1HGBH41JXMN109186
-✓ License Plate: FL-ABC123
-✓ Vehicle Make/Model: 2020 Ford Transit Van
-
-STRUCTURED DATA EXTRACTED:
-✓ Policy Number: ${data.policyNumber || claim.policyNumber || 'POL-789456'}
-✓ Fleet Owner: ${data.fleetOwner || claim.fleetOwner || 'ABC Logistics Inc.'}
-✓ Driver Name: ${data.driverName || claim.name || 'John Smith'}
-✓ Contact Phone: ${data.phone || claim.phone || '(555) 123-4567'}
-✓ Contact Email: ${data.email || claim.email || 'john@abclogistics.com'}
-✓ Loss Type: ${data.lossType || claim.lossType || 'Auto Collision'}
-✓ Vehicles Involved: ${data.vehiclesInvolved || (claim.vehiclesInvolved?.length > 0 ? claim.vehiclesInvolved.join(', ') : 'AUTO-001')}
-✓ Incident Description: ${data.description || claim.description || 'Rear-end collision during heavy traffic causing front-end damage to vehicle'}`;
+      let output = `EXTRACTED CLAIM INFORMATION FROM UPLOADED DOCUMENTS:\n\n`;
+      
+      if (hasFiles) {
+        output += `📁 ANALYZED FILES (${claim.files.length} documents):\n`;
+        fileNames.forEach((name: string, index: number) => {
+          output += `${index + 1}. ${name}\n`;
+        });
+        output += `\n`;
+      }
+      
+      if (hasPoliceReport || !hasFiles) {
+        output += `📄 POLICE REPORT ANALYSIS:\n`;
+        output += `✓ Incident Date: ${claim.incidentDate || '2024-01-15'} at ${claim.incidentTime || '14:30'}\n`;
+        output += `✓ Location: ${dynamicData.location}\n`;
+        output += `✓ Weather Conditions: ${dynamicData.weather}\n`;
+        output += `✓ Officer Badge: ${dynamicData.officerBadge}\n`;
+        output += `✓ Report Number: ${dynamicData.reportNumber}\n\n`;
+      }
+      
+      if (hasLicense || !hasFiles) {
+        output += `📄 DRIVER LICENSE SCAN:\n`;
+        output += `✓ License Number: ${dynamicData.licenseNumber}\n`;
+        output += `✓ Expiry Date: 12/2026 (Valid)\n`;
+        output += `✓ CDL Status: Commercial Driver License Active\n`;
+        output += `✓ Restrictions: None\n`;
+        output += `✓ Previous Violations: Clean record\n\n`;
+      }
+      
+      if (hasPhotos || !hasFiles) {
+        output += `📄 VEHICLE PHOTOS ANALYSIS:\n`;
+        output += `✓ Damage Location: ${dynamicData.damageType}\n`;
+        output += `✓ Damage Severity: ${hasPhotos ? 'Analyzed from uploaded photos' : 'Moderate impact damage'}\n`;
+        output += `✓ VIN Extracted: ${dynamicData.vin}\n`;
+        output += `✓ License Plate: ${dynamicData.licensePlate}\n`;
+        output += `✓ Vehicle Make/Model: ${dynamicData.vehicleType}\n\n`;
+      }
+      
+      output += `STRUCTURED DATA EXTRACTED:\n`;
+      output += `✓ Policy Number: ${data.policyNumber || claim.policyNumber || 'POL-789456'}\n`;
+      output += `✓ Fleet Owner: ${data.fleetOwner || claim.fleetOwner || 'ABC Logistics Inc.'}\n`;
+      output += `✓ Driver Name: ${data.driverName || claim.name || 'John Smith'}\n`;
+      output += `✓ Contact Phone: ${data.phone || claim.phone || '(555) 123-4567'}\n`;
+      output += `✓ Contact Email: ${data.email || claim.email || 'john@abclogistics.com'}\n`;
+      output += `✓ Loss Type: ${data.lossType || claim.lossType || 'Auto Collision'}\n`;
+      output += `✓ Vehicles Involved: ${data.vehiclesInvolved || (claim.vehiclesInvolved?.length > 0 ? claim.vehiclesInvolved.join(', ') : 'AUTO-001')}\n`;
+      output += `✓ Incident Description: ${data.description || claim.description || 'Rear-end collision during heavy traffic causing front-end damage to vehicle'}`;
+      
+      if (hasFiles) {
+        output += `\n\n✅ DOCUMENT ANALYSIS: Successfully processed ${claim.files.length} uploaded documents with ${hasPhotos ? 'computer vision' : 'OCR'} technology`;
+      }
+      
+      return output;
 
     case "validation":
-      return `VALIDATION RESULTS:
+      const validationOutput = `VALIDATION RESULTS:
 
-POLICY VALIDATION:
-✓ Policy ${claim.policyNumber} verified as ACTIVE
+${hasFiles ? `📁 VALIDATION SOURCE: Analyzing ${claim.files.length} uploaded documents\n` : ''}POLICY VALIDATION:
+✓ Policy ${data.policyNumber || claim.policyNumber || 'POL-789456'} verified as ACTIVE
 ✓ Premium payments up to date
-✓ Fleet registration confirmed for ${claim.fleetOwner}
+✓ Fleet registration confirmed for ${data.fleetOwner || claim.fleetOwner || 'ABC Logistics Inc.'}
 ✓ Coverage effective from: 01/01/2024 to 12/31/2024
 
 DRIVER VALIDATION:
-✓ Driver license DL789456123 validated with DMV
+✓ Driver license ${dynamicData.licenseNumber} validated with DMV
 ✓ Commercial driving privileges: ACTIVE
 ✓ No license suspensions found
 ✓ Driver authorized on policy roster
 
 VEHICLE VALIDATION:
-✓ VIN 1HGBH41JXMN109186 matches policy records
+✓ VIN ${dynamicData.vin} matches policy records
 ✓ Vehicle registration current and valid
 ✓ Safety inspection up to date
 ✓ Vehicle covered under commercial fleet policy
 
-FINAL VALIDATION: ✅ CLAIM IS VALID FOR PROCESSING`;
+${hasInsurance ? '✅ INSURANCE DOCUMENTS: Policy documents cross-referenced and validated\n' : ''}FINAL VALIDATION: ✅ CLAIM IS VALID FOR PROCESSING`;
+      return validationOutput;
 
     case "fraud-detection":
-      return `FRAUD ANALYSIS COMPLETE:
+      const fraudAnalysis = `FRAUD ANALYSIS COMPLETE:
 
-DUPLICATE CLAIM ANALYSIS:
+${hasFiles ? `📊 ANALYSIS SCOPE: ${claim.files.length} documents processed for fraud indicators\n` : ''}DUPLICATE CLAIM ANALYSIS:
 ✓ No duplicate claims found for this incident
 ✓ No similar claims from same driver in past 12 months
-✓ Location cross-reference: No pattern of claims at this location
+✓ Location cross-reference: No pattern of claims at ${dynamicData.location}
 
 INCIDENT VERIFICATION:
 ✓ GPS data confirms vehicle was at reported location
 ✓ Timeline analysis: Story is consistent and logical
-✓ Weather data matches police report conditions
-✓ Traffic camera footage request submitted
+✓ Weather data matches conditions: ${dynamicData.weather}
+${hasPhotos ? '✓ Photo metadata analysis: Consistent timestamps and GPS coordinates\n' : ''}✓ Traffic camera footage request submitted
 
 BEHAVIORAL ANALYSIS:
-✓ Driver's claim history: 2 claims in 5 years (Normal)
+✓ Driver's claim history: ${Math.floor((parseInt(claim.id?.slice(-3) || '123') % 5) + 1)} claims in 5 years (${(parseInt(claim.id?.slice(-3) || '123') % 5) < 2 ? 'Low' : 'Normal'})
 ✓ No suspicious activity patterns detected
-✓ Claim amount reasonable for damage type
-✓ Reporting time: 2 hours after incident (Normal)
+✓ Claim amount reasonable for damage type: ${dynamicData.damageType}
+✓ Reporting time: ${Math.floor((parseInt(claim.id?.slice(-3) || '123') % 6) + 1)} hours after incident (Normal)
 
 FRAUD RISK ASSESSMENT:
-✓ Overall Risk Score: 15/100 (LOW RISK)
+✓ Overall Risk Score: ${Math.floor((parseInt(claim.id?.slice(-3) || '123') % 25) + 10)}/100 (LOW RISK)
 ✓ No red flags identified
 ✓ Recommended Action: PROCEED WITH STANDARD PROCESSING`;
+      return fraudAnalysis;
 
     case "claim-creation":
-      return `CLAIM CREATED SUCCESSFULLY:
+      const creationOutput = `CLAIM CREATED SUCCESSFULLY:
 
 CLAIM DETAILS:
 ✓ Claim Number: ${claim.id}
 ✓ Created Date: ${claim.submittedAt.toLocaleDateString()}
-✓ Claim Type: Commercial Vehicle Collision
-✓ Priority Level: Standard Processing
+✓ Claim Type: Commercial Vehicle ${claim.lossType === 'Cargo Theft' ? 'Cargo Theft' : 'Collision'}
+✓ Priority Level: ${hasFiles && claim.files.length > 5 ? 'High Priority' : 'Standard Processing'}
 
 ADJUSTER ASSIGNMENT:
 ✓ Assigned Adjuster: ${claim.assignedAdjuster}
-✓ Adjuster Experience: 8 years commercial claims
-✓ Current Workload: 23 active claims
-✓ Specialization: Fleet vehicle damages
-✓ Contact: sarah.johnson@insurance.com
+✓ Adjuster Experience: ${Math.floor((parseInt(claim.id?.slice(-3) || '123') % 8) + 5)} years commercial claims
+✓ Current Workload: ${Math.floor((parseInt(claim.id?.slice(-3) || '123') % 15) + 15)} active claims
+✓ Specialization: ${claim.lossType === 'Cargo Theft' ? 'Cargo and theft claims' : 'Fleet vehicle damages'}
+✓ Contact: ${claim.assignedAdjuster?.toLowerCase().replace(' ', '.')}@insurance.com
 
 SERVICE LEVEL AGREEMENT:
-✓ Initial Contact: Within 24 hours
-✓ Inspection Scheduled: Within 72 hours
-✓ Settlement Target: 5-7 business days
+✓ Initial Contact: Within ${hasFiles && hasPhotos ? '12' : '24'} hours
+✓ Inspection Scheduled: Within ${hasFiles && hasPhotos ? '48' : '72'} hours  
+✓ Settlement Target: ${claim.lossType === 'Cargo Theft' ? '7-10' : '5-7'} business days
 ✓ Workflow Status: INITIATED AND ACTIVE`;
+      return creationOutput;
 
     case "coverage-verification":
-      return `COVERAGE VERIFICATION:
+      const coverageOutput = `COVERAGE VERIFICATION:
 
 POLICY ANALYSIS:
-✓ Policy Type: Commercial Fleet Insurance - Premium Plan
+✓ Policy Type: Commercial Fleet Insurance - ${hasInsurance ? 'Premium Plan (verified from uploaded policy)' : 'Premium Plan'}
 ✓ Policy Holder: ${claim.fleetOwner}
 ✓ Coverage Period: ACTIVE (Jan 1, 2024 - Dec 31, 2024)
-✓ Annual Premium: $24,500 (Paid in full)
+✓ Annual Premium: $${(parseInt(claim.id?.slice(-3) || '123') % 30 + 20) * 1000} (Paid in full)
 
 COVERAGE VERIFICATION REASONING:
-✓ Collision Coverage: $50,000 limit - APPLIES to this claim
+✓ ${claim.lossType === 'Cargo Theft' ? 'Cargo Coverage' : 'Collision Coverage'}: $${(parseInt(claim.id?.slice(-3) || '123') % 50 + 25) * 1000} limit - APPLIES to this claim
 ✓ Vehicle was being used for commercial purposes - COVERED
 ✓ Driver was authorized and properly licensed - COVERED
 ✓ Incident occurred during policy period - COVERED
 ✓ No policy exclusions apply to this type of loss
 
 DEDUCTIBLE & LIMITS:
-✓ Collision Deductible: $2,500 per incident
-✓ Remaining Policy Limit: $47,500 available
-✓ Previous Claims This Year: 1 ($3,200 paid)
+✓ ${claim.lossType === 'Cargo Theft' ? 'Cargo' : 'Collision'} Deductible: $${Math.floor((parseInt(claim.id?.slice(-3) || '123') % 3 + 1) * 1000)} per incident
+✓ Remaining Policy Limit: $${(parseInt(claim.id?.slice(-3) || '123') % 45 + 30) * 1000} available
+✓ Previous Claims This Year: ${Math.floor((parseInt(claim.id?.slice(-3) || '123') % 3))} ($${Math.floor((parseInt(claim.id?.slice(-3) || '123') % 10 + 1) * 1000)} paid)
 
 COVERAGE DETERMINATION: ✅ INCIDENT IS FULLY COVERED
-Reason: Standard collision during commercial use with authorized driver`;
+Reason: ${claim.lossType === 'Cargo Theft' ? 'Cargo theft during authorized commercial transport' : 'Standard collision during commercial use with authorized driver'}`;
+      return coverageOutput;
 
     case "damage-assessment":
-      return `DAMAGE ASSESSMENT COMPLETE:
+      const estimatedCost = hasPhotos ? 
+        Math.floor((parseInt(claim.id?.slice(-3) || '123') % 25 + 10) * 1000) :  // $10k-35k
+        Math.floor((parseInt(claim.id?.slice(-3) || '123') % 15 + 8) * 1000);    // $8k-23k
+      
+      const damageOutput = `DAMAGE ASSESSMENT COMPLETE:
 
-PHOTO ANALYSIS RESULTS:
-✓ Front bumper: Cracked and needs replacement - $1,200
-✓ Hood: Dented and requires body work - $2,400
-✓ Left headlight assembly: Damaged, needs replacement - $450
-✓ Grille: Broken, replacement needed - $380
-✓ Front left fender: Minor dents, paintwork needed - $800
+${hasPhotos ? `📸 PHOTO ANALYSIS: ${claim.files.filter(f => f.name.toLowerCase().includes('photo') || /\.(jpg|jpeg|png)$/.test(f.name)).length} photos analyzed using computer vision\n` : ''}${claim.lossType === 'Cargo Theft' ? `CARGO ASSESSMENT RESULTS:
+✓ Missing Items: Electronics shipment (verified from manifests)
+✓ Container Security: Lock cut, door forced open
+✓ Estimated Cargo Value: $${estimatedCost.toLocaleString()}
+✓ Recovery Probability: ${Math.floor((parseInt(claim.id?.slice(-3) || '123') % 40) + 10)}%
+✓ Time of Theft: Estimated between midnight and 3 AM` : `PHOTO ANALYSIS RESULTS:
+✓ ${dynamicData.damageType}: Primary impact area - $${Math.floor(estimatedCost * 0.4)}
+✓ Secondary damage: Panel and component damage - $${Math.floor(estimatedCost * 0.35)}
+✓ Paint and finish work: Color matching required - $${Math.floor(estimatedCost * 0.15)}
+✓ Mechanical components: ${hasPhotos ? 'No engine damage detected' : 'Inspection required'} - $${Math.floor(estimatedCost * 0.1)}`}
 
 ASSESSMENT METHODOLOGY:
-The AI analyzed 12 high-resolution photos using computer vision:
-• Damage severity scoring based on visual indicators
+${claim.lossType === 'Cargo Theft' ? 'Cargo manifest cross-referenced with shipping documents and current market values' : `${hasPhotos ? 'AI analyzed high-resolution photos' : 'Standard assessment based on reported damage'} using ${hasPhotos ? 'computer vision' : 'industry estimates'}:`}
+${claim.lossType !== 'Cargo Theft' ? `• Damage severity scoring based on visual indicators
 • Parts identification using vehicle database matching
-• Cost estimation using regional labor rates ($95/hour)
-• Parts pricing from OEM and aftermarket suppliers
+• Cost estimation using regional labor rates ($${85 + (parseInt(claim.id?.slice(-3) || '123') % 20)}/hour)
+• Parts pricing from OEM and aftermarket suppliers` : ''}
 
-REPAIR ESTIMATE BREAKDOWN:
-✓ Labor Costs: $8,000 (84 hours @ $95/hour)
-  - Body work: 45 hours
-  - Paint preparation: 24 hours
-  - Assembly/alignment: 15 hours
-✓ Parts Costs: $10,000
-  - OEM parts: $8,500
-  - Paint materials: $1,500
-✓ Total Repair Cost: $18,000
+${claim.lossType === 'Cargo Theft' ? `TOTAL LOSS ASSESSMENT:
+✓ Cargo Value: $${estimatedCost.toLocaleString()}
+✓ Recovery Deduction: -$${Math.floor(estimatedCost * 0.1).toLocaleString()} (estimated 10% recovery)
+✓ Net Loss Amount: $${Math.floor(estimatedCost * 0.9).toLocaleString()}
+✓ Assessment Confidence: ${hasFiles ? '90%' : '75%'} (${hasFiles ? 'High - manifests available' : 'Medium - standard assessment'})` : `REPAIR ESTIMATE BREAKDOWN:
+✓ Labor Costs: $${Math.floor(estimatedCost * 0.6).toLocaleString()} (${Math.floor(estimatedCost * 0.6 / 95)} hours @ $95/hour)
+✓ Parts Costs: $${Math.floor(estimatedCost * 0.4).toLocaleString()}
+✓ Total Repair Cost: $${estimatedCost.toLocaleString()}
 
 TOTAL LOSS ASSESSMENT:
-✓ Vehicle Value (ACV): $32,000
-✓ Total Loss Threshold: $25,000 (80% of ACV)
-✓ Repair Cost: $18,000
+✓ Vehicle Value (ACV): $${Math.floor(estimatedCost * 1.8).toLocaleString()}
+✓ Total Loss Threshold: $${Math.floor(estimatedCost * 1.4).toLocaleString()} (80% of ACV)
+✓ Repair Cost: $${estimatedCost.toLocaleString()}
 ✓ Status: REPAIRABLE (Cost below threshold)
-✓ Assessment Confidence: 95% (High accuracy)`;
+✓ Assessment Confidence: ${hasPhotos ? '95%' : '80%'} (${hasPhotos ? 'High - photos analyzed' : 'Standard assessment'})`}`;
+      return damageOutput;
 
     case "settlement-payout":
       return `SETTLEMENT CALCULATION:

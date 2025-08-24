@@ -99,10 +99,10 @@ export default function Dashboard() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "completed": return "success";
-      case "processing": return "status-processing";
-      case "submitted": return "secondary";
-      case "fraud-review": return "warning";
+      case "completed": return "default";
+      case "processing": return "secondary";
+      case "submitted": return "outline";
+      case "fraud-review": return "destructive";
       case "error": return "destructive";
       default: return "secondary";
     }
@@ -182,13 +182,17 @@ export default function Dashboard() {
                   <thead>
                     <tr className="border-b bg-muted/20">
                       <th className="text-left p-3 font-medium">Claim ID</th>
+                      <th className="text-left p-3 font-medium">Policy #</th>
                       <th className="text-left p-3 font-medium">Fleet Owner</th>
-                      <th className="text-left p-3 font-medium">Adjuster</th>
-                      <th className="text-left p-3 font-medium">Created</th>
+                      <th className="text-left p-3 font-medium">Driver</th>
+                      <th className="text-left p-3 font-medium">Vehicle ID</th>
+                      <th className="text-left p-3 font-medium">Accident Date</th>
+                      <th className="text-left p-3 font-medium">Claim Type</th>
                       <th className="text-left p-3 font-medium">Status</th>
-                      <th className="text-left p-3 font-medium">Progress</th>
-                      <th className="text-left p-3 font-medium">Damage</th>
-                      <th className="text-left p-3 font-medium">Payout</th>
+                      <th className="text-left p-3 font-medium">Fraud Risk</th>
+                      <th className="text-left p-3 font-medium">Estimated Amount</th>
+                      <th className="text-left p-3 font-medium">Approved Amount</th>
+                      <th className="text-left p-3 font-medium">Adjuster</th>
                       <th className="text-left p-3 font-medium">Actions</th>
                     </tr>
                   </thead>
@@ -208,22 +212,28 @@ export default function Dashboard() {
                             </div>
                           </td>
                           <td className="p-3">
+                            <span className="font-medium">{claim.policyNumber}</span>
+                          </td>
+                          <td className="p-3">
                             <div>
                               <p className="font-medium">{getFleetOwner(claim)}</p>
-                              <p className="text-xs text-muted-foreground">{getIncidentDescription(claim)}</p>
+                              <p className="text-xs text-muted-foreground">{claim.location}</p>
                             </div>
                           </td>
                           <td className="p-3">
-                            <div>
-                              <p className="font-medium">{getAdjusterInfo(claim).name}</p>
-                              <p className="text-xs text-muted-foreground">{getAdjusterInfo(claim).location}</p>
-                            </div>
+                            <span className="font-medium">{claim.driverName}</span>
+                          </td>
+                          <td className="p-3">
+                            <span className="font-medium">{claim.vehiclesInvolved.join(', ')}</span>
                           </td>
                           <td className="p-3">
                             <div>
-                              <p className="font-medium">{claim.submittedAt.toLocaleDateString()}</p>
-                              <p className="text-xs text-muted-foreground">{claim.submittedAt.toLocaleTimeString()}</p>
+                              <p className="font-medium">{new Date(claim.incidentDate).toLocaleDateString()}</p>
+                              <p className="text-xs text-muted-foreground">Reported: {claim.submittedAt.toLocaleDateString()}</p>
                             </div>
+                          </td>
+                          <td className="p-3">
+                            <span className="font-medium">{claim.lossType}</span>
                           </td>
                           <td className="p-3">
                             <Badge variant={getStatusColor(getCurrentStatus(claim)) as any}>
@@ -231,22 +241,30 @@ export default function Dashboard() {
                             </Badge>
                           </td>
                           <td className="p-3">
-                            <div className="w-20">
-                              <div className="flex justify-between text-xs mb-1">
-                                <span>{claim.progress}%</span>
-                              </div>
-                              <Progress value={claim.progress} className="h-1" />
-                            </div>
+                            <Badge variant={
+                              claim.fraudRiskScore === 'High' ? 'destructive' : 
+                              claim.fraudRiskScore === 'Medium' ? 'secondary' : 
+                              'default'
+                            }>
+                              {claim.fraudRiskScore}
+                            </Badge>
                           </td>
                           <td className="p-3">
                             <span className="font-medium">
-                              {extractDamageAmount(claim) > 0 ? `$${extractDamageAmount(claim).toLocaleString()}` : '-'}
+                              {extractDamageAmount(claim) > 0 ? `$${extractDamageAmount(claim).toLocaleString()}` : 
+                               claim.payoutEstimate > 0 ? `$${claim.payoutEstimate.toLocaleString()}` : '-'}
                             </span>
                           </td>
                           <td className="p-3">
                             <span className="font-medium text-green-600">
                               {extractPayoutAmount(claim) > 0 ? `$${extractPayoutAmount(claim).toLocaleString()}` : '-'}
                             </span>
+                          </td>
+                          <td className="p-3">
+                            <div>
+                              <p className="font-medium">{getAdjusterInfo(claim).name}</p>
+                              <p className="text-xs text-muted-foreground">{getAdjusterInfo(claim).location}</p>
+                            </div>
                           </td>
                           <td className="p-3">
                             <div className="flex gap-1">

@@ -4,6 +4,7 @@ export interface Claim {
   id: string;
   policyNumber: string;
   fleetOwner: string;
+  driverName: string;
   vehiclesInvolved: string[];
   lossType: string;
   status: string;
@@ -20,6 +21,7 @@ export interface Claim {
   location: string;
   description: string;
   files: File[];
+  fraudRiskScore: 'High' | 'Medium' | 'Low';
   // Agent outputs and edits
   agentOutputs?: Record<string, string>;
   editedData?: Record<string, any>;
@@ -51,6 +53,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       id: "CL-2024-001234",
       policyNumber: "POL-789456",
       fleetOwner: "ABC Logistics Inc.",
+      driverName: "Michael Rodriguez",
       vehiclesInvolved: ["TRK-001", "VAN-045"],
       lossType: "Collision",
       status: "completed",
@@ -67,6 +70,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       location: "Interstate 95, Mile Marker 127, Baltimore, MD",
       description: "Rear-end collision during heavy traffic causing front-end damage to vehicle",
       files: [],
+      fraudRiskScore: 'Low',
       adjusterDetails: {
         name: "Sarah Johnson",
         email: "sarah.johnson@autosure.com",
@@ -83,6 +87,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       id: "CL-2024-001235",
       policyNumber: "POL-789457",
       fleetOwner: "XYZ Transport Co.",
+      driverName: "Carlos Martinez",
       vehiclesInvolved: ["TRK-002"],
       lossType: "Cargo Theft",
       status: "processing",
@@ -99,6 +104,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       location: "Warehouse District, Houston, TX",
       description: "Cargo theft from locked trailer overnight - electronics shipment stolen",
       files: [],
+      fraudRiskScore: 'Medium',
       adjusterDetails: {
         name: "Mike Chen",
         email: "mike.chen@autosure.com",
@@ -115,6 +121,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       id: "CL-2024-001236",
       policyNumber: "POL-789458",
       fleetOwner: "Metro Delivery Services",
+      driverName: "James Wilson",
       vehiclesInvolved: ["VAN-012"],
       lossType: "Vehicle Theft",
       status: "fraud-review",
@@ -131,6 +138,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       location: "Downtown Parking Garage, Miami, FL",
       description: "Commercial van stolen from secured parking facility",
       files: [],
+      fraudRiskScore: 'High',
       adjusterDetails: {
         name: "Lisa Rodriguez",
         email: "lisa.rodriguez@autosure.com",
@@ -144,6 +152,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       id: "CL-2024-001237",
       policyNumber: "POL-789459",
       fleetOwner: "Swift Cargo Solutions",
+      driverName: "Robert Johnson",
       vehiclesInvolved: ["TRK-045", "TRL-089"],
       lossType: "Multi-Vehicle Collision",
       status: "processing",
@@ -160,6 +169,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       location: "Highway 10 West, Phoenix, AZ",
       description: "Multi-vehicle accident involving truck and trailer in heavy rain conditions",
       files: [],
+      fraudRiskScore: 'Low',
       adjusterDetails: {
         name: "David Kim",
         email: "david.kim@autosure.com",
@@ -173,6 +183,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       id: "CL-2024-001238",
       policyNumber: "POL-789460",
       fleetOwner: "Urban Express LLC",
+      driverName: "Thomas Anderson",
       vehiclesInvolved: ["VAN-023"],
       lossType: "Property Damage",
       status: "submitted",
@@ -189,6 +200,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       location: "Broadway & 42nd Street, New York, NY",
       description: "Delivery van collided with building entrance causing structural damage",
       files: [],
+      fraudRiskScore: 'Medium',
       adjusterDetails: {
         name: "Sarah Johnson",
         email: "sarah.johnson@autosure.com",
@@ -202,6 +214,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       id: "CL-2024-001239",
       policyNumber: "POL-789461",
       fleetOwner: "Coastal Transport Inc.",
+      driverName: "David Thompson",
       vehiclesInvolved: ["TRK-067"],
       lossType: "Weather Damage",
       status: "completed",
@@ -218,6 +231,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       location: "Interstate 4, Orlando, FL",
       description: "Hail damage to truck cab and cargo area during severe thunderstorm",
       files: [],
+      fraudRiskScore: 'Low',
       adjusterDetails: {
         name: "Mike Chen",
         email: "mike.chen@autosure.com",
@@ -235,6 +249,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       id: "CL-2024-001240",
       policyNumber: "POL-789462",
       fleetOwner: "Prime Logistics Group",
+      driverName: "Steven Garcia",
       vehiclesInvolved: ["TRK-134", "TRL-456"],
       lossType: "Fire Damage",
       status: "processing",
@@ -251,6 +266,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       location: "Rest Area Mile 245, I-75 North, Georgia",
       description: "Engine fire spread to cargo area causing total loss of vehicle and partial cargo damage",
       files: [],
+      fraudRiskScore: 'Medium',
       adjusterDetails: {
         name: "Lisa Rodriguez", 
         email: "lisa.rodriguez@autosure.com",
@@ -267,6 +283,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       id: "CL-2024-001241",
       policyNumber: "POL-789463",
       fleetOwner: "Reliable Freight Systems",
+      driverName: "Mark Davis",
       vehiclesInvolved: ["VAN-078"],
       lossType: "Vandalism",
       status: "submitted",
@@ -283,6 +300,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       location: "Industrial District, Detroit, MI",
       description: "Commercial van windows broken and tires slashed during overnight parking",
       files: [],
+      fraudRiskScore: 'High',
       adjusterDetails: {
         name: "David Kim",
         email: "david.kim@autosure.com",
@@ -296,6 +314,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       id: "CL-2024-001242",
       policyNumber: "POL-789464",
       fleetOwner: "Express Route Partners",
+      driverName: "Anthony Wilson",
       vehiclesInvolved: ["TRK-089"],
       lossType: "Mechanical Failure",
       status: "error",
@@ -312,6 +331,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       location: "Highway 101, San Francisco, CA",
       description: "Engine failure during delivery route causing roadside breakdown and towing",
       files: [],
+      fraudRiskScore: 'Low',
       adjusterDetails: {
         name: "Sarah Johnson",
         email: "sarah.johnson@autosure.com",
@@ -325,6 +345,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       id: "CL-2024-001243",
       policyNumber: "POL-789465",
       fleetOwner: "Northeast Shipping Co.",
+      driverName: "Brian Miller",
       vehiclesInvolved: ["TRK-156", "TRL-234"],
       lossType: "Jackknife Accident",
       status: "processing",
@@ -341,6 +362,7 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
       location: "I-95 North, Exit 47, Massachusetts",
       description: "Truck jackknifed on icy road conditions causing guardrail damage and cargo spill",
       files: [],
+      fraudRiskScore: 'Low',
       adjusterDetails: {
         name: "Mike Chen",
         email: "mike.chen@autosure.com",

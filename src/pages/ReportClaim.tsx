@@ -146,7 +146,9 @@ export default function ReportClaim() {
     // Create new claim with human adjuster assignment and realistic data
     const claimId = addClaim({
       ...formData,
+      policyNumber: formData.policyNumber || "POL-" + String(Math.floor(Math.random() * 900000) + 100000),
       fleetOwner: formData.name || "Private Commercial Owner",
+      driverName: formData.name || "Driver Name TBD",
       vehiclesInvolved: ["TRK-" + String(Math.floor(Math.random() * 900) + 100)], // Generate realistic vehicle ID
       lossType: determineLossType(formData.description, formData.files),
       status: "submitted",
@@ -154,6 +156,7 @@ export default function ReportClaim() {
       payoutEstimate: 0,
       currentAgent: "fnol-intake",
       progress: 10,
+      fraudRiskScore: 'Low',
       adjusterDetails: {
         ...selectedAdjuster,
         assignedAt: new Date(),

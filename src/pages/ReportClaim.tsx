@@ -67,23 +67,61 @@ export default function ReportClaim() {
   const submitClaim = () => {
     setIsSubmitting(true);
     
-    // Create new claim with initial processing status
+    // Assign a human adjuster based on loss type and location
+    const humanAdjusters = [
+      {
+        name: "Sarah Johnson",
+        email: "sarah.johnson@autosure.com", 
+        phone: "(555) 234-5671",
+        location: "Chicago, IL",
+        expertise: "Collision Claims"
+      },
+      {
+        name: "Mike Chen", 
+        email: "mike.chen@autosure.com",
+        phone: "(555) 345-6782", 
+        location: "Denver, CO",
+        expertise: "Cargo & Theft Claims"
+      },
+      {
+        name: "Lisa Rodriguez",
+        email: "lisa.rodriguez@autosure.com",
+        phone: "(555) 456-7893",
+        location: "Phoenix, AZ", 
+        expertise: "Liability Claims"
+      },
+      {
+        name: "David Kim",
+        email: "david.kim@autosure.com",
+        phone: "(555) 567-8904",
+        location: "Seattle, WA",
+        expertise: "Fleet Claims"
+      }
+    ];
+    
+    // Select adjuster based on claim characteristics
+    let selectedAdjuster = humanAdjusters[0]; // default
+    if (formData.description.toLowerCase().includes('theft') || formData.description.toLowerCase().includes('cargo')) {
+      selectedAdjuster = humanAdjusters[1]; // Mike Chen for theft/cargo
+    } else if (formData.description.toLowerCase().includes('liability') || formData.description.toLowerCase().includes('injury')) {
+      selectedAdjuster = humanAdjusters[2]; // Lisa Rodriguez for liability
+    } else if (formData.name.toLowerCase().includes('fleet') || formData.description.toLowerCase().includes('multiple vehicles')) {
+      selectedAdjuster = humanAdjusters[3]; // David Kim for fleet
+    }
+    
+    // Create new claim with human adjuster assignment
     const claimId = addClaim({
       ...formData,
       fleetOwner: formData.name || "Unknown Fleet",
       vehiclesInvolved: ["AUTO-001"], // Default for now
       lossType: "Auto Collision", // Default for now  
       status: "submitted",
-      assignedAdjuster: "AI Agent",
+      assignedAdjuster: selectedAdjuster.name,
       payoutEstimate: 0,
-      currentAgent: "document-review",
-      progress: 5,
+      currentAgent: "fnol-intake",
+      progress: 10,
       adjusterDetails: {
-        name: "AI Agent",
-        email: "ai.agent@autosure.com",
-        phone: "(555) 000-0000",
-        location: "Virtual Processing Center",
-        expertise: "Automated Claims Processing",
+        ...selectedAdjuster,
         assignedAt: new Date(),
       },
       agentOutputs: {},

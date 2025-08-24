@@ -523,7 +523,7 @@ const agentPipeline = [
 export default function ClaimDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getClaim, updateClaim } = useClaims();
+  const { getClaim, updateClaim, saveAgentOutput, saveEditedData } = useClaims();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [editingAgent, setEditingAgent] = useState<string | null>(null);
@@ -773,11 +773,18 @@ FILE STATUS: Ready for final review and payment authorization`
   const handleSaveAgent = () => {
     if (!claim || !editingAgent) return;
     
-    // Store edited data for this agent
+    // Save edited data to context
+    saveEditedData(claim.id, editingAgent, editData);
+    
+    // Store edited data for this agent locally
     setAgentEditedData(prev => ({
       ...prev,
       [editingAgent]: { ...editData }
     }));
+    
+    // Generate and save updated agent output with edited data
+    const updatedOutput = getAgentOutput(editingAgent, claim, editData);
+    saveAgentOutput(claim.id, editingAgent, updatedOutput);
     
     // Update core claim data if FNOL agent is being edited
     if (editingAgent === 'fnol-intake') {

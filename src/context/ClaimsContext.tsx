@@ -38,6 +38,8 @@ interface ClaimsContextType {
   addClaim: (claim: Omit<Claim, 'id' | 'submittedAt'>) => string;
   updateClaim: (id: string, updates: Partial<Claim>) => void;
   getClaim: (id: string) => Claim | undefined;
+  saveAgentOutput: (claimId: string, agentId: string, output: string) => void;
+  saveEditedData: (claimId: string, agentId: string, data: any) => void;
 }
 
 const ClaimsContext = createContext<ClaimsContextType | undefined>(undefined);
@@ -127,8 +129,32 @@ export function ClaimsProvider({ children }: { children: ReactNode }) {
     return claims.find(claim => claim.id === id);
   };
 
+  const saveAgentOutput = (claimId: string, agentId: string, output: string) => {
+    setClaims(prev => prev.map(claim => 
+      claim.id === claimId ? { 
+        ...claim, 
+        agentOutputs: { 
+          ...claim.agentOutputs, 
+          [agentId]: output 
+        }
+      } : claim
+    ));
+  };
+
+  const saveEditedData = (claimId: string, agentId: string, data: any) => {
+    setClaims(prev => prev.map(claim => 
+      claim.id === claimId ? { 
+        ...claim, 
+        editedData: { 
+          ...claim.editedData, 
+          [agentId]: data 
+        }
+      } : claim
+    ));
+  };
+
   return (
-    <ClaimsContext.Provider value={{ claims, addClaim, updateClaim, getClaim }}>
+    <ClaimsContext.Provider value={{ claims, addClaim, updateClaim, getClaim, saveAgentOutput, saveEditedData }}>
       {children}
     </ClaimsContext.Provider>
   );

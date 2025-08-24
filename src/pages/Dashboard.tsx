@@ -25,6 +25,42 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { claims } = useClaims();
 
+  // Helper function to extract real payout amount from agent outputs
+  const extractPayoutAmount = (claim: any) => {
+    if (claim.agentOutputs?.['settlement-payout']) {
+      const output = claim.agentOutputs['settlement-payout'];
+      // Extract net payout amount from the agent output
+      const payoutMatch = output.match(/Net Payout[:\s]*\$([0-9,]+)/i);
+      if (payoutMatch) {
+        return parseInt(payoutMatch[1].replace(/,/g, ''));
+      }
+    }
+    return claim.payoutEstimate || 0;
+  };
+
+  // Helper function to extract damage amount from agent outputs
+  const extractDamageAmount = (claim: any) => {
+    if (claim.agentOutputs?.['damage-assessment']) {
+      const output = claim.agentOutputs['damage-assessment'];
+      // Extract total damage amount from the agent output
+      const damageMatch = output.match(/Total Damage Amount[:\s]*\$([0-9,]+)/i) ||
+                         output.match(/Total Repair[:\s]*\$([0-9,]+)/i) ||
+                         output.match(/Cargo Value[:\s]*\$([0-9,]+)/i);
+      if (damageMatch) {
+        return parseInt(damageMatch[1].replace(/,/g, ''));
+      }
+    }
+    return 0;
+  };
+
+  // Helper function to get current processing status from agent outputs
+  const getCurrentStatus = (claim: any) => {
+    const agentCount = claim.agentOutputs ? Object.keys(claim.agentOutputs).length : 0;
+    if (agentCount >= 8) return 'completed';
+    if (agentCount >= 3) return 'processing';
+    return claim.status || 'submitted';
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed": return "success";
@@ -121,15 +157,16 @@ export default function Dashboard() {
                                   NEW
                                 </Badge>
                               )}
-                              <Badge variant={getStatusColor(claim.status) as any}>
-                                {getStatusLabel(claim.status)}
-                              </Badge>
+                               <Badge variant={getStatusColor(getCurrentStatus(claim)) as any}>
+                                 {getStatusLabel(getCurrentStatus(claim))}
+                               </Badge>
                             </div>
                             <div className="space-y-1 text-sm">
                               <p><strong>Fleet Owner:</strong> {claim.fleetOwner}</p>
                               <p><strong>Loss Type:</strong> {claim.lossType}</p>
                               <p><strong>Vehicles:</strong> {claim.vehiclesInvolved.join(', ')}</p>
-                              <p><strong>Payout Estimate:</strong> ${claim.payoutEstimate.toLocaleString()}</p>
+                              <p><strong>Damage Assessment:</strong> {extractDamageAmount(claim) > 0 ? `$${extractDamageAmount(claim).toLocaleString()}` : 'Pending'}</p>
+                              <p><strong>Settlement Payout:</strong> {extractPayoutAmount(claim) > 0 ? `$${extractPayoutAmount(claim).toLocaleString()}` : 'Pending'}</p>
                             </div>
                           </div>
 
